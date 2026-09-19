@@ -1,8 +1,8 @@
 # 1.Tên đồ án: HỆ THỐNG ĐẶT PHÒNG KHÁCH SẠN
 # 2.HT_SV
-**Nguyễn Anh Khoa** - '2606042025'
-**Huỳnh Anh Khoa** - '2606042040'
-**Lê Nguyễn Bảo Nam** - '2606042023'
+1. **Nguyễn Anh Khoa** - `2606042025`  
+2. **Huỳnh Anh Khoa** - `2606042040`  
+3. **Lê Nguyễn Bảo Nam** - `2606042023`  
 
 # BÀI 5 - HỆ THỐNG ĐẶT PHÒNG KHÁCH SẠN / HOMESTAY
 
