@@ -1,5 +1,5 @@
-#1.Tên đồ án: HỆ THỐNG ĐẶT PHÒNG KHÁCH SẠN
-#2.HT_SV
+# 1.Tên đồ án: HỆ THỐNG ĐẶT PHÒNG KHÁCH SẠN
+# 2.HT_SV
 Nguyễn Anh Khoa_2606042025
 Huỳnh Anh Khoa_2606042040
 Lê Nguyễn Bảo Nam_2606042023
