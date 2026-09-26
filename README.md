@@ -172,8 +172,3 @@ StayManager mô phỏng quy trình vận hành cơ bản của khách sạn từ
 phòng đến check-in, dịch vụ, thanh toán, check-out, housekeeping và báo
 cáo. Project giúp thực hành giao diện web, REST API, Node.js/Express,
 MongoDB/Mongoose, quản lý dữ liệu và triển khai ứng dụng.
-
-## Tác giả
-
-**StayManager Hotel Management Project**\
-Đồ án phục vụ mục đích học tập.
