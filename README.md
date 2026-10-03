@@ -97,35 +97,6 @@ thông tin hóa đơn.
 **Deployment:** Render\
 **Version Control:** GitHub
 
-## Cài đặt
-
-Yêu cầu Node.js, npm và MongoDB/MongoDB Atlas.
-
-Cài dependencies:
-
-    npm install
-
-Tạo file `.env`:
-
-    MONGODB_URI=your_mongodb_connection_string
-    PORT=5500
-    ADMIN_USER=your_admin_username
-    ADMIN_PASSWORD=your_admin_password
-
-> Không đưa file `.env` chứa thông tin thật lên GitHub.
-
-Chạy project:
-
-    node server.js
-
-Trang quản trị:
-
-    http://localhost:5500
-
-Website khách hàng:
-
-    http://localhost:5500/hotel.html
-
 ## Cấu trúc project
 
     StayManager/
@@ -171,7 +142,4 @@ phòng đến check-in, dịch vụ, thanh toán, check-out, housekeeping và b�
 cáo. Project giúp thực hành giao diện web, REST API, Node.js/Express,
 MongoDB/Mongoose, quản lý dữ liệu và triển khai ứng dụng.
 
-## Tác giả
 
-**StayManager Hotel Management Project**\
-Đồ án phục vụ mục đích học tập.
