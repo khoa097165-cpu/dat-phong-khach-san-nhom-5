@@ -1,8 +1,8 @@
 # Đề tài: Đặt phòng khách sạn
 # Danh sách sinh viên:
-1. Nguyễn Anh Khoa    MSSV:2606042025
-2. Huỳnh Anh Khoa     MSSV:2606042040
-3. Lê Nguyễn Bảo Nam  MSSV:2606042023
+1. Nguyễn Anh Khoa-MSSV:2606042025
+2. Huỳnh Anh Khoa-MSSV:2606042040
+3. Lê Nguyễn Bảo Nam-MSSV:2606042023
 # StayManager -- Hotel Management & Online Booking System
 
 StayManager là hệ thống **quản lý và đặt phòng khách sạn** dành cho đồ
