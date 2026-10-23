@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="vi">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   StayManager Hotel | Đặt phòng trực tiếp
+  </title>
+  <meta content="Đặt phòng StayManager Hotel trực tiếp, kiểm tra phòng trống và nhận ưu đãi độc quyền." name="description"/>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js">
+  </script>
+  <style>
+   [x-cloak]{display:none!important}html{scroll-behavior:smooth}.hero{background:linear-gradient(90deg,rgba(9,18,32,.82),rgba(9,18,32,.22)),url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2000&q=90') center/cover}.serif{font-family:Georgia,'Times New Roman',serif}.field{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px 12px;background:white;color:#0f172a}.gold{background:#1d4ed8}.gold:hover{background:#1e40af}.room-img{transition:transform .45s}.room-card:hover .room-img{transform:scale(1.04)}
+  </style>
+ </head>
+ <body class="bg-slate-50 text-slate-800" x-data="hotel()" x-init="init()">
+  <header class="absolute z-20 w-full text-white">
+   <div class="max-w-7xl mx-auto px-5 py-5 flex items-center justify-between gap-4">
+    <a class="serif text-xl md:text-2xl font-bold" href="#">
+     ✦
+     <span x-text="settings.hotelName || 'StayManager Hotel'">
+     </span>
+    </a>
+    <nav class="hidden md:flex gap-7 text-sm">
+     <a class="hover:text-blue-300" href="#rooms">
+      Phòng nghỉ
+     </a>
+     <a class="hover:text-blue-300" href="#offers">
+      Ưu đãi
+     </a>
+     <a class="hover:text-blue-300" href="#experience">
+      Trải nghiệm
+     </a>
+     <a class="hover:text-blue-300" href="#lookup">
+      Tra cứu đặt phòng
+     </a>
+     <a class="hover:text-blue-300" href="#contact">
+      Liên hệ
+     </a>
+    </nav>
+    <a class="rounded-full border border-white/60 px-4 py-2 text-sm hover:bg-white hover:text-slate-900" href="#rooms">
+     Đặt phòng ngay
+    </a>
+   </div>
+  </header>
+  <section class="hero min-h-[690px] flex items-center text-white">
+   <div class="max-w-7xl mx-auto px-5 w-full pt-24">
+    <p class="uppercase tracking-[.28em] text-blue-300 text-xs md:text-sm mb-5">
+     Hospitality · Comfort · Memories
+    </p>
+    <h1 class="serif text-5xl md:text-7xl max-w-3xl leading-[1.08]">
+     Nơi kỳ nghỉ của bạn trở thành kỷ niệm.
+    </h1>
+    <p class="mt-6 text-lg text-slate-200 max-w-xl leading-7">
+     Không gian nghỉ dưỡng tinh tế, dịch vụ chu đáo và mức giá tốt nhất khi đặt trực tiếp tại khách sạn.
+    </p>
+    <div class="mt-10 bg-white text-slate-800 rounded-2xl shadow-2xl p-4 md:p-5 grid md:grid-cols-4 gap-3 max-w-5xl">
+     <label class="text-xs font-bold tracking-wide">
+      NHẬN PHÒNG
+      <input :min="today" class="mt-2 w-full border rounded-lg p-3 font-normal text-sm" type="date" x-model="search.checkIn"/>
+     </label>
+     <label class="text-xs font-bold tracking-wide">
+      TRẢ PHÒNG
+      <input :min="search.checkIn" class="mt-2 w-full border rounded-lg p-3 font-normal text-sm" type="date" x-model="search.checkOut"/>
+     </label>
+     <label class="text-xs font-bold tracking-wide">
+      SỐ KHÁCH
+      <input class="mt-2 w-full border rounded-lg p-3 font-normal text-sm" max="20" min="1" type="number" x-model.number="search.guests"/>
+     </label>
+     <div class="flex items-end">
+      <button @click="findRooms" class="gold w-full text-white rounded-lg p-3.5 font-bold">
+       Tìm phòng trống →
+      </button>
+     </div>
+    </div>
+    <div class="flex flex-wrap gap-5 mt-6 text-sm text-slate-200">
+     <span>
+      ✓ Giá tốt khi đặt trực tiếp
+     </span>
+     <span>
+      ✓ Xác nhận nhanh chóng
+     </span>
+     <span>
+      ✓ Hỗ trợ tận tâm
+     </span>
+    </div>
+   </div>
+  </section>
+  <section class="bg-white border-b border-slate-100">
+   <div class="max-w-7xl mx-auto px-5 py-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm">
+    <div>
+     ✦
+     <b>
+      Phòng tiện nghi
+     </b>
+    </div>
+    <div>
+     ☕
+     <b>
+      Dịch vụ chu đáo
+     </b>
+    </div>
+    <div>
+     🔒
+     <b>
+      Đặt phòng an tâm
+     </b>
+    </div>
+    <div>
+     🎁
+     <b>
+      Ưu đãi độc quyền
+     </b>
+    </div>
+   </div>
+  </section>
+  <section class="max-w-7xl mx-auto px-5 py-20" id="rooms">
+   <div class="flex flex-wrap justify-between items-end gap-4 mb-10">
+    <div>
+     <p class="text-blue-700 font-bold tracking-[.2em] text-xs">
+      KHÔNG GIAN LƯU TRÚ
+     </p>
+     <h2 class="serif text-4xl md:text-5xl mt-3">
+      Chọn căn phòng của bạn
+     </h2>
+     <p class="text-slate-500 mt-3">
+      Mỗi căn phòng được chuẩn bị để bạn nghỉ ngơi trọn vẹn.
+     </p>
+    </div>
+    <span class="text-sm text-slate-500" x-text="rooms.length+' lựa chọn phòng'">
+    </span>
+   </div>
+   <div class="py-10 text-center text-slate-500" x-show="loading">
+    Đang tải danh sách phòng…
+   </div>
+   <div class="rounded-2xl bg-white border p-8 text-center text-slate-500" x-show="!loading &amp;&amp; rooms.length===0">
+    Không có phòng phù hợp với ngày bạn chọn. Hãy thử ngày khác nhé.
+   </div>
+   <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-7">
+    <template :key="r._id" x-for="(r,i) in rooms">
+     <article class="room-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+      <div class="h-60 overflow-hidden bg-slate-200 relative">
+       <img :alt="r.type" :src="roomImage(i)" class="room-img w-full h-full object-cover"/>
+       <span class="absolute top-4 left-4 bg-white/95 rounded-full px-3 py-1 text-xs font-bold" x-text="'PHÒNG '+r.roomNumber">
+       </span>
+      </div>
+      <div class="p-6">
+       <div class="flex justify-between gap-3">
+        <div>
+         <h3 class="serif text-2xl" x-text="r.type">
+         </h3>
+         <p class="text-sm text-slate-500 mt-2">
+          👥 Tối đa
+          <span x-text="r.capacity">
+          </span>
+          khách · Tầng
+          <span x-text="r.floor">
+          </span>
+         </p>
+        </div>
+        <div class="text-right shrink-0">
+         <b class="text-blue-800" x-text="money(r.price)">
+         </b>
+         <div class="text-xs text-slate-400">
+          mỗi đêm
+         </div>
+        </div>
+       </div>
+       <div class="flex flex-wrap gap-2 mt-4 text-xs text-slate-600">
+        <span class="bg-slate-100 px-2.5 py-1 rounded-full">
+         Wi-Fi
+        </span>
+        <span class="bg-slate-100 px-2.5 py-1 rounded-full">
+         Điều hòa
+        </span>
+        <span class="bg-slate-100 px-2.5 py-1 rounded-full">
+         Phòng sạch
+        </span>
+       </div>
+       <button @click="choose(r)" class="mt-6 w-full border border-slate-800 rounded-lg py-3 font-semibold hover:bg-slate-900 hover:text-white transition">
+        Xem giá &amp; đặt phòng
+       </button>
+      </div>
+     </article>
+    </template>
+   </div>
+  </section>
+  <section class="bg-blue-50 border-y border-blue-100" id="offers">
+   <div class="max-w-7xl mx-auto px-5 py-20">
+    <div class="text-center mb-10">
+     <p class="text-blue-800 font-bold tracking-[.2em] text-xs">
+      ĐẶC QUYỀN DÀNH CHO BẠN
+     </p>
+     <h2 class="serif text-4xl md:text-5xl mt-3">
+      Ưu đãi &amp; mã khuyến mãi
+     </h2>
+     <p class="text-slate-600 mt-3">
+      Nhập mã ở bước đặt phòng để áp dụng giảm giá vào hóa đơn.
+     </p>
+    </div>
+    <div class="max-w-xl mx-auto bg-white rounded-2xl p-7 text-center text-slate-500 border border-blue-100" x-show="promotions.length===0">
+     Ưu đãi mới sẽ được cập nhật tại đây. Hãy kiểm tra lại trước khi đặt phòng!
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+     <template :key="promo.code" x-for="promo in promotions">
+      <article class="bg-white rounded-2xl p-6 border border-blue-200 shadow-sm relative overflow-hidden">
+       <div class="absolute -right-5 -top-5 text-7xl opacity-10">
+        🎁
+       </div>
+       <p class="text-xs uppercase tracking-widest text-blue-800 font-bold" x-text="promo.title">
+       </p>
+       <div class="serif text-3xl mt-2 font-bold" x-text="promo.type==='percent' ? 'Giảm '+promo.value+'%' : 'Giảm '+money(promo.value)">
+       </div>
+       <p class="text-sm text-slate-600 mt-2" x-text="promo.description || 'Ưu đãi đặt phòng trực tiếp'">
+       </p>
+       <div class="mt-5 flex items-center justify-between gap-3 border-t border-dashed pt-4">
+        <div>
+         <span class="text-xs text-slate-500">
+          MÃ ƯU ĐÃI
+         </span>
+         <div class="font-mono font-bold text-lg tracking-widest" x-text="promo.code">
+         </div>
+        </div>
+        <button @click="copyCode(promo.code)" class="text-sm font-bold text-blue-800 border border-blue-700 rounded-lg px-3 py-2">
+         Sao chép mã
+        </button>
+       </div>
+       <p class="text-xs text-slate-400 mt-3" x-text="'Hạn dùng: '+date(promo.expiresAt)+(promo.minAmount?' · Đơn tối thiểu '+money(promo.minAmount):'')">
+       </p>
+      </article>
+     </template>
+    </div>
+   </div>
+  </section>
+  <section class="bg-white border-y border-slate-200" id="lookup">
+   <div class="max-w-4xl mx-auto px-5 py-16 md:py-20">
+    <div class="text-center mb-8">
+     <p class="text-blue-800 font-bold tracking-[.2em] text-xs">
+      HÀNH TRÌNH CỦA BẠN
+     </p>
+     <h2 class="serif text-4xl md:text-5xl mt-3">
+      Tra cứu đặt phòng
+     </h2>
+     <p class="text-slate-500 mt-3">
+      Nhập mã đặt phòng và số điện thoại đã dùng khi đặt để xem trạng thái.
+     </p>
+    </div>
+    <form @submit.prevent="lookupBooking" class="bg-slate-50 border rounded-2xl p-5 md:p-7 grid sm:grid-cols-3 gap-3">
+     <label class="text-xs font-bold">
+      MÃ ĐẶT PHÒNG
+      <input class="field mt-1.5 uppercase" placeholder="Ví dụ: BK123ABC" required="" x-model.trim="lookupForm.bookingCode"/>
+     </label>
+     <label class="text-xs font-bold">
+      SỐ ĐIỆN THOẠI
+      <input class="field mt-1.5" inputmode="tel" placeholder="Số điện thoại đặt phòng" required="" x-model.trim="lookupForm.customerPhone"/>
+     </label>
+     <div class="flex items-end">
+      <button :disabled="lookupLoading" class="gold text-white font-bold rounded-lg p-3 w-full disabled:opacity-60" x-text="lookupLoading?'Đang tra cứu…':'Tra cứu đơn' ">
+      </button>
+     </div>
+    </form>
+    <p :class="lookupResult?'text-emerald-700':'text-rose-600'" class="text-sm mt-4 text-center" x-show="lookupMessage" x-text="lookupMessage">
+    </p>
+    <div class="mt-6 border border-slate-200 rounded-2xl p-5 md:p-7 shadow-sm" x-cloak="" x-show="lookupResult">
+     <div class="flex flex-wrap justify-between gap-3 items-start">
+      <div>
+       <p class="text-xs tracking-widest font-bold text-blue-800">
+        MÃ ĐẶT PHÒNG
+       </p>
+       <h3 class="font-mono text-2xl font-bold mt-1" x-text="lookupResult?.bookingCode">
+       </h3>
+       <p class="text-slate-500 text-sm mt-1" x-text="lookupResult?.roomId?.type+' · Phòng '+lookupResult?.roomId?.roomNumber">
+       </p>
+      </div>
+      <span class="rounded-full bg-blue-50 text-blue-900 px-3 py-1.5 text-sm font-bold" x-text="statusText(lookupResult?.status)">
+      </span>
+     </div>
+     <div class="grid sm:grid-cols-2 gap-4 mt-6 text-sm">
+      <div class="bg-slate-50 rounded-xl p-4">
+       <p class="text-slate-500">
+        Khách lưu trú
+       </p>
+       <b x-text="lookupResult?.customerName">
+       </b>
+       <p class="text-slate-500 mt-3">
+        Số khách
+       </p>
+       <b x-text="lookupResult?.guests+' người'">
+       </b>
+      </div>
+      <div class="bg-slate-50 rounded-xl p-4">
+       <p class="text-slate-500">
+        Nhận phòng
+       </p>
+       <b x-text="date(lookupResult?.checkInDate)">
+       </b>
+       <p class="text-slate-500 mt-3">
+        Trả phòng
+       </p>
+       <b x-text="date(lookupResult?.checkOutDate)">
+       </b>
+      </div>
+     </div>
+     <div class="border-t mt-5 pt-5 space-y-2 text-sm">
+      <div class="flex justify-between gap-4">
+       <span>
+        Tiền phòng
+       </span>
+       <b x-text="money(lookupResult?.roomAmount)">
+       </b>
+      </div>
+      <div class="flex justify-between gap-4">
+       <span>
+        Giảm giá
+       </span>
+       <b class="text-emerald-700" x-text="'− '+money(lookupResult?.discount)">
+       </b>
+      </div>
+      <div class="flex justify-between gap-4">
+       <span>
+        Tổng tiền
+       </span>
+       <b x-text="money(lookupResult?.totalAmount)">
+       </b>
+      </div>
+      <div class="flex justify-between gap-4">
+       <span>
+        Đã thanh toán
+       </span>
+       <b x-text="money(lookupResult?.paidAmount)">
+       </b>
+      </div>
+      <div class="flex justify-between gap-4">
+       <span>
+        Còn lại
+       </span>
+       <b class="text-blue-800" x-text="money(lookupResult?.remainingAmount)">
+       </b>
+      </div>
+      <div class="flex justify-between gap-4">
+       <span>
+        Thanh toán
+       </span>
+       <b x-text="paymentText(lookupResult?.paymentStatus,lookupResult?.paymentMethod)">
+       </b>
+      </div>
+     </div>
+     <div class="mt-5 bg-blue-50 border border-blue-100 rounded-xl p-4">
+      <b class="text-sm">
+       Chính sách hủy phòng
+      </b>
+      <p class="text-sm text-slate-600 mt-1" x-text="lookupResult?.cancellationPolicy">
+      </p>
+      <p class="text-xs text-slate-500 mt-2">
+       Yêu cầu hoàn tiền (nếu có) được lễ tân xử lý thủ công. Vui lòng liên hệ khách sạn để xác nhận thời gian nhận hoàn.
+      </p>
+     </div>
+     <button :disabled="cancelLoading" @click="cancelBooking" class="mt-5 border border-rose-300 text-rose-700 hover:bg-rose-50 rounded-lg px-4 py-2.5 text-sm font-bold disabled:opacity-50" x-show="lookupResult?.status==='confirmed'" x-text="cancelLoading?'Đang gửi yêu cầu…':'Yêu cầu hủy đặt phòng'">
+     </button>
+    </div>
+   </div>
+  </section>
+  <section class="max-w-7xl mx-auto px-5 py-20" id="experience">
+   <div class="grid md:grid-cols-2 gap-12 items-center">
+    <div class="rounded-3xl overflow-hidden h-80 md:h-[440px]">
+     <img alt="Không gian khách sạn" class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&amp;fit=crop&amp;w=1200&amp;q=85"/>
+    </div>
+    <div>
+     <p class="text-blue-700 tracking-[.2em] text-xs font-bold">
+      TRẢI NGHIỆM STAYMANAGER
+     </p>
+     <h2 class="serif text-4xl md:text-5xl mt-3 leading-tight">
+      Thoải mái trong từng chi tiết nhỏ.
+     </h2>
+     <p class="text-slate-600 leading-7 mt-5">
+      Chúng tôi tin rằng kỳ nghỉ tuyệt vời bắt đầu từ cảm giác được chào đón. Từ phòng nghỉ sạch sẽ đến quy trình đặt phòng dễ dàng, mọi chi tiết đều hướng đến sự an tâm của bạn.
+     </p>
+     <div class="grid grid-cols-2 gap-4 mt-7">
+      <div class="border-l-2 border-blue-600 pl-4">
+       <b>
+        Phục vụ tận tâm
+       </b>
+       <p class="text-sm text-slate-500 mt-1">
+        Luôn sẵn sàng hỗ trợ
+       </p>
+      </div>
+      <div class="border-l-2 border-blue-600 pl-4">
+       <b>
+        Thanh toán linh hoạt
+       </b>
+       <p class="text-sm text-slate-500 mt-1">
+        QR chuyển khoản hoặc tiền mặt
+       </p>
+      </div>
+      <div class="border-l-2 border-blue-600 pl-4">
+       <b>
+        Thông tin rõ ràng
+       </b>
+       <p class="text-sm text-slate-500 mt-1">
+        Biết trước tổng chi phí
+       </p>
+      </div>
+      <div class="border-l-2 border-blue-600 pl-4">
+       <b>
+        Ưu đãi trực tiếp
+       </b>
+       <p class="text-sm text-slate-500 mt-1">
+        Mã giảm giá dễ sử dụng
+       </p>
+      </div>
+     </div>
+    </div>
+   </div>
+  </section>
+  <footer class="bg-slate-950 text-slate-300" id="contact">
+   <div class="max-w-7xl mx-auto px-5 py-12 grid md:grid-cols-3 gap-8">
+    <div>
+     <b class="serif text-2xl text-white" x-text="settings.hotelName || 'StayManager Hotel'">
+     </b>
+     <p class="text-sm leading-6 mt-3 max-w-sm">
+      Một điểm dừng chân để nghỉ ngơi, tái tạo năng lượng và tận hưởng những khoảnh khắc đáng nhớ.
+     </p>
+    </div>
+    <div>
+     <b class="text-white">
+      Liên hệ
+     </b>
+     <p class="mt-3 text-sm" x-text="settings.address || 'Địa chỉ khách sạn'">
+     </p>
+     <p class="mt-2 text-sm" x-text="settings.phone || 'Hotline khách sạn'">
+     </p>
+     <p class="mt-2 text-sm" x-text="settings.email || 'Email khách sạn'">
+     </p>
+    </div>
+    <div>
+     <b class="text-white">
+      Chính sách đặt phòng
+     </b>
+     <p class="text-sm mt-3 leading-6">
+      Nhận phòng từ
+      <span x-text="settings.checkInTime || '14:00'">
+      </span>
+      · Trả phòng trước
+      <span x-text="settings.checkOutTime || '12:00'">
+      </span>
+      .
+     </p>
+     <p class="text-xs text-slate-500 mt-3">
+      Vui lòng liên hệ khách sạn nếu cần thay đổi hoặc hủy đặt phòng.
+     </p>
+    </div>
+   </div>
+   <div class="border-t border-white/10 py-4 text-center text-xs text-slate-500">
+    ©
+    <span x-text="new Date().getFullYear()">
+    </span>
+    StayManager Hotel · Đặt trực tiếp, nghỉ an tâm
+   </div>
+  </footer>
+  <!-- Booking checkout modal -->
+  <div class="fixed inset-0 bg-black/65 z-50 flex items-center justify-center p-3 md:p-5" x-cloak="" x-show="modal" x-transition.opacity="">
+   <div @click.outside="modal=false" class="bg-white rounded-2xl max-w-2xl w-full max-h-[94vh] overflow-auto shadow-2xl">
+    <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
+     <div>
+      <p class="text-xs text-blue-800 font-bold tracking-widest">
+       ĐẶT PHÒNG TRỰC TUYẾN
+      </p>
+      <h3 class="serif text-2xl mt-1" x-text="selected?.type+' · Phòng '+selected?.roomNumber">
+      </h3>
+     </div>
+     <button @click="modal=false" class="text-3xl leading-none text-slate-400">
+      ×
+     </button>
+    </div>
+    <div class="p-6">
+     <div x-show="!success">
+      <div class="grid sm:grid-cols-2 gap-3">
+       <label class="text-xs font-bold">
+        HỌ VÀ TÊN
+        <input class="field mt-1.5" placeholder="Nguyễn Văn A" required="" x-model.trim="form.name"/>
+       </label>
+       <label class="text-xs font-bold">
+        SỐ ĐIỆN THOẠI
+        <input class="field mt-1.5" placeholder="09xx xxx xxx" required="" x-model.trim="form.phone"/>
+       </label>
+       <label class="text-xs font-bold">
+        EMAIL
+        <input class="field mt-1.5" placeholder="email@example.com" type="email" x-model.trim="form.email"/>
+       </label>
+       <label class="text-xs font-bold">
+        SỐ KHÁCH
+        <input :max="selected?.capacity || 20" class="field mt-1.5" min="1" type="number" x-model.number="search.guests"/>
+       </label>
+       <label class="text-xs font-bold">
+        NGÀY NHẬN PHÒNG
+        <input :min="today" @change="discount=0;promoMessage='Hãy áp dụng lại mã sau khi đổi ngày.'" class="field mt-1.5" type="date" x-model="search.checkIn"/>
+       </label>
+       <label class="text-xs font-bold">
+        NGÀY TRẢ PHÒNG
+        <input :min="search.checkIn" @change="discount=0;promoMessage='Hãy áp dụng lại mã sau khi đổi ngày.'" class="field mt-1.5" type="date" x-model="search.checkOut"/>
+       </label>
+      </div>
+      <label class="block text-xs font-bold mt-4">
+       YÊU CẦU THÊM
+       <textarea class="field mt-1.5" placeholder="Ví dụ: phòng không hút thuốc..." rows="2" x-model="form.notes"></textarea>
+      </label>
+      <div class="mt-5 rounded-xl border border-slate-200 p-4">
+       <h4 class="font-bold">
+        🎟️ Mã khuyến mãi
+       </h4>
+       <div class="flex gap-2 mt-3">
+        <input class="field uppercase" placeholder="Nhập mã ưu đãi" x-model.trim="promoCode"/>
+        <button :disabled="promoLoading" @click="applyPromo" class="shrink-0 rounded-lg px-4 font-bold border border-blue-700 text-blue-800" x-text="promoLoading?'Đang kiểm tra…':'Áp dụng'">
+        </button>
+       </div>
+       <p :class="promoMessage.startsWith('Đã áp dụng')?'text-emerald-700':'text-rose-600'" class="text-sm mt-2" x-text="promoMessage">
+       </p>
+      </div>
+      <div class="mt-5">
+       <h4 class="font-bold">
+        💳 Phương thức thanh toán
+       </h4>
+       <div class="grid sm:grid-cols-2 gap-3 mt-3">
+        <button :class="paymentMethod==='transfer'?'border-blue-700 bg-blue-50 ring-1 ring-blue-600':'border-slate-200'" @click="paymentMethod='transfer'" class="text-left border rounded-xl p-4">
+         <span class="text-xl">
+          ▦
+         </span>
+         <b class="block mt-2">
+          Quét mã QR
+         </b>
+         <span class="text-xs text-slate-500">
+          Chuyển khoản ngân hàng
+         </span>
+        </button>
+        <button :class="paymentMethod==='cash'?'border-blue-700 bg-blue-50 ring-1 ring-blue-600':'border-slate-200'" @click="paymentMethod='cash'" class="text-left border rounded-xl p-4">
+         <span class="text-xl">
+          ₫
+         </span>
+         <b class="block mt-2">
+          Tiền mặt tại quầy
+         </b>
+         <span class="text-xs text-slate-500">
+          Thanh toán khi đến khách sạn
+         </span>
+        </button>
+       </div>
+      </div>
+      <div class="mt-5 bg-slate-50 rounded-xl p-4 space-y-2 text-sm">
+       <div class="flex justify-between">
+        <span>
+         Thời gian lưu trú
+        </span>
+        <b x-text="nights+' đêm'">
+        </b>
+       </div>
+       <div class="flex justify-between">
+        <span>
+         Tiền phòng
+        </span>
+        <b x-text="money(roomTotal)">
+        </b>
+       </div>
+       <div class="flex justify-between text-emerald-700" x-show="discount&gt;0">
+        <span>
+         Ưu đãi (
+         <span x-text="promoCode.toUpperCase()">
+         </span>
+         )
+        </span>
+        <b x-text="'− '+money(discount)">
+        </b>
+       </div>
+       <div class="border-t pt-3 flex justify-between text-base">
+        <b>
+         Tổng thanh toán
+        </b>
+        <b class="text-blue-800 text-xl" x-text="money(finalTotal)">
+        </b>
+       </div>
+      </div>
+      <button :disabled="submitting" @click="book" class="gold mt-5 w-full rounded-xl py-3.5 text-white font-bold disabled:opacity-50" x-text="submitting?'Đang xử lý…':'Xác nhận đặt phòng'">
+      </button>
+      <p class="text-xs text-slate-500 mt-3 text-center">
+       Đặt phòng chỉ được ghi nhận khi hệ thống xác nhận. Với chuyển khoản QR, trạng thái thanh toán sẽ chờ xác minh.
+      </p>
+      <p class="text-sm text-rose-600 mt-3" x-show="message" x-text="message">
+      </p>
+     </div>
+     <div class="text-center py-5" x-show="success">
+      <div class="text-5xl">
+       🎉
+      </div>
+      <h3 class="serif text-3xl mt-3">
+       Đặt phòng thành công!
+      </h3>
+      <p class="text-slate-600 mt-2">
+       Mã đặt phòng của bạn
+      </p>
+      <div class="font-mono font-bold text-2xl tracking-widest mt-1" x-text="receipt.bookingCode">
+      </div>
+      <div class="bg-slate-50 rounded-xl p-4 mt-5 text-left">
+       <div class="flex justify-between">
+        <span>
+         Tổng tiền
+        </span>
+        <b x-text="money(receipt.totalAmount)">
+        </b>
+       </div>
+       <div class="flex justify-between mt-2">
+        <span>
+         Thanh toán
+        </span>
+        <b x-text="receipt.paymentMethod==='transfer'?'Chuyển khoản QR':'Tiền mặt tại quầy'">
+        </b>
+       </div>
+       <div class="flex justify-between mt-2">
+        <span>
+         Trạng thái
+        </span>
+        <b :class="receipt.paymentStatus==='paid'?'text-emerald-700':'text-blue-700'" x-text="paymentText(receipt.paymentStatus, receipt.paymentMethod)">
+        </b>
+       </div>
+      </div>
+      <div class="mt-5 border rounded-xl p-4" x-show="receipt.paymentMethod==='transfer'">
+       <h4 class="font-bold">
+        Quét mã QR để chuyển khoản
+       </h4>
+       <template x-if="receipt.qrUrl">
+        <div>
+         <img :src="receipt.qrUrl" alt="Mã QR chuyển khoản" class="w-56 h-56 object-contain mx-auto mt-3"/>
+         <p class="text-sm text-slate-600 mt-2">Nội dung chuyển khoản: <b x-text="'STAY '+receipt.bookingCode"></b></p>
+        </div>
+       </template>
+       <template x-if="!receipt.qrUrl">
+        <div class="text-sm text-rose-700 bg-rose-50 p-3 rounded-lg mt-3">
+         Khách sạn chưa cấu hình tài khoản ngân hàng nên chưa thể tạo QR thanh toán. Vui lòng chọn tiền mặt hoặc liên hệ lễ tân.
+        </div>
+       </template>
+       <p class="text-xs mt-3" :class="receipt.paymentStatus==='paid'?'text-emerald-700':'text-slate-500'" x-text="receipt.paymentStatus==='paid'?'✓ Thanh toán thành công. Khách sạn đã xác nhận nhận được tiền.':'Đặt phòng đã được ghi nhận. Vui lòng chuyển đúng số tiền và nội dung STAY ở trên. Trạng thái sẽ đổi thành “Thanh toán thành công” sau khi khách sạn xác nhận tiền đã vào tài khoản.'"></p>
+      </div>
+      <button @click="modal=false;success=false;findRooms()" class="mt-5 w-full border border-slate-300 rounded-xl py-3 font-bold">
+       Đóng
+      </button>
+     </div>
+    </div>
+   </div>
+   <script>
+    function hotel() {
+        return {
+            settings: {}, rooms: [], promotions: [], selected: null, modal: false, loading: true, submitting: false, promoLoading: false, success: false, message: '', promoCode: '', promoMessage: '', discount: 0, paymentMethod: 'cash', receipt: {}, lookupForm: { bookingCode: '', customerPhone: '' }, lookupResult: null, lookupMessage: '', lookupLoading: false, cancelLoading: false,
+            today: new Date().toISOString().slice(0, 10),
+            search: { checkIn: new Date().toISOString().slice(0, 10), checkOut: new Date(Date.now() + 86400000).toISOString().slice(0, 10), guests: 1 },
+            form: { name: '', phone: '', email: '', notes: '' },
+            get nights() { let a = new Date(this.search.checkIn + 'T00:00:00'), b = new Date(this.search.checkOut + 'T00:00:00'); return Math.max(0, Math.ceil((b - a) / 86400000)); },
+            get roomTotal() { return Number(this.selected?.price || 0) * this.nights; },
+            get finalTotal() { return Math.max(0, this.roomTotal - this.discount); },
+            async init() { try {
+                let res = await Promise.all([fetch('/api/public/settings'), fetch('/api/public/rooms'), fetch('/api/public/promotions')]);
+                this.settings = await res[0].json();
+                this.rooms = await res[1].json();
+                this.promotions = await res[2].json();
+            }
+            catch (e) {
+                console.error(e);
+                this.message = 'Không tải được dữ liệu. Vui lòng thử tải lại trang.';
+            }
+            finally {
+                this.loading = false;
+            } },
+            async findRooms() { if (!this.search.checkIn || !this.search.checkOut || this.search.checkOut <= this.search.checkIn) {
+                alert('Ngày trả phòng phải sau ngày nhận phòng.');
+                return;
+            } try {
+                this.loading = true;
+                let r = await fetch('/api/public/available?checkIn=' + this.search.checkIn + '&checkOut=' + this.search.checkOut);
+                let d = await r.json();
+                if (!r.ok)
+                    throw Error(d.error);
+                this.rooms = d;
+                document.querySelector('#rooms').scrollIntoView({ behavior: 'smooth' });
+            }
+            catch (e) {
+                alert(e.message);
+            }
+            finally {
+                this.loading = false;
+            } },
+            choose(r) { this.selected = r; this.modal = true; this.success = false; this.message = ''; this.promoCode = ''; this.promoMessage = ''; this.discount = 0; this.paymentMethod = 'cash'; this.receipt = {}; this.form = { name: '', phone: '', email: '', notes: '' }; },
+            async applyPromo() { if (!this.promoCode.trim()) {
+                this.promoMessage = 'Vui lòng nhập mã khuyến mãi.';
+                return;
+            } if (this.nights < 1) {
+                this.promoMessage = 'Vui lòng chọn ngày nhận/trả phòng hợp lệ.';
+                return;
+            } this.promoLoading = true; try {
+                let r = await fetch('/api/public/promotions/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: this.promoCode, amount: this.roomTotal }) });
+                let d = await r.json();
+                if (!r.ok)
+                    throw Error(d.error);
+                this.discount = d.discount;
+                this.promoCode = d.code;
+                this.promoMessage = 'Đã áp dụng ' + d.code + ' · tiết kiệm ' + this.money(d.discount);
+            }
+            catch (e) {
+                this.discount = 0;
+                this.promoMessage = e.message;
+            }
+            finally {
+                this.promoLoading = false;
+            } },
+            async book() { this.message = ''; if (!this.form.name || !this.form.phone) {
+                this.message = 'Vui lòng nhập họ tên và số điện thoại.';
+                return;
+            } if (!this.selected) {
+                this.message = 'Vui lòng chọn phòng.';
+                return;
+            } if (this.nights < 1) {
+                this.message = 'Ngày trả phòng phải sau ngày nhận phòng.';
+                return;
+            } if (this.search.guests < 1 || this.search.guests > Number(this.selected.capacity || 20)) {
+                this.message = 'Số khách vượt quá sức chứa của phòng.';
+                return;
+            } this.submitting = true; try {
+                let r = await fetch('/api/public/bookings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customerName: this.form.name, customerPhone: this.form.phone, customerEmail: this.form.email, roomId: this.selected._id, checkInDate: this.search.checkIn, checkOutDate: this.search.checkOut, guests: this.search.guests, notes: this.form.notes, promoCode: this.promoCode, paymentMethod: this.paymentMethod }) });
+                let d = await r.json();
+                if (!r.ok)
+                    throw Error(d.error);
+                this.receipt = d;
+                this.transferNotified = false;
+                this.success = true;
+                // Tải lại phòng theo đúng ngày đã chọn để phòng vừa đặt biến mất ngay.
+                const availableResponse = await fetch('/api/public/available?checkIn=' + this.search.checkIn + '&checkOut=' + this.search.checkOut);
+                if (availableResponse.ok) this.rooms = await availableResponse.json();
+                if (d.paymentMethod === 'transfer') this.watchPaymentStatus();
+                this.promotions = await fetch('/api/public/promotions').then(x => x.json());
+            }
+            catch (e) {
+                this.message = e.message;
+            }
+            finally {
+                this.submitting = false;
+            } },
+            async watchPaymentStatus() {
+                const bookingCode = this.receipt.bookingCode;
+                const customerPhone = this.form.phone;
+                if (!bookingCode || !customerPhone) return;
+                // Polling chỉ đọc trạng thái; chỉ quản trị viên/lễ tân mới được xác nhận tiền đã về.
+                let attempts = 0;
+                const poll = async () => {
+                    if (!this.success || this.receipt.bookingCode !== bookingCode || attempts >= 180) return;
+                    attempts += 1;
+                    try {
+                        const response = await fetch('/api/public/bookings/lookup', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ bookingCode, customerPhone })
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                            this.receipt.paymentStatus = data.paymentStatus;
+                            if (data.paymentStatus === 'paid') {
+                                this.receipt.paidAmount = data.paidAmount;
+                                this.receipt.paymentConfirmedAt = new Date().toISOString();
+                                this.message = '✓ Thanh toán thành công! Khách sạn đã xác nhận nhận được tiền.';
+                                return;
+                            }
+                        }
+                    } catch (e) { /* Mạng tạm thời lỗi: tiếp tục thử lại. */ }
+                    window.setTimeout(poll, 5000);
+                };
+                window.setTimeout(poll, 3000);
+            },
+            async copyCode(code) { try {
+                await navigator.clipboard.writeText(code);
+                alert('Đã sao chép mã ' + code);
+            }
+            catch (e) {
+                this.promoCode = code;
+                document.querySelector('input[placeholder="Nhập mã ưu đãi"]')?.select();
+                alert('Mã ưu đãi: ' + code);
+            } },
+            async lookupBooking() { this.lookupLoading = true; this.lookupMessage = ''; this.lookupResult = null; try {
+                let r = await fetch('/api/public/bookings/lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(this.lookupForm) });
+                let d = await r.json();
+                if (!r.ok)
+                    throw Error(d.error || 'Không tra cứu được đơn');
+                this.lookupResult = d;
+                this.lookupMessage = 'Đã tìm thấy đơn đặt phòng.';
+            }
+            catch (e) {
+                this.lookupMessage = e.message;
+            }
+            finally {
+                this.lookupLoading = false;
+            } },
+            async cancelBooking() { if (!this.lookupResult)
+                return; if (!confirm('Bạn có chắc muốn gửi yêu cầu hủy đặt phòng ' + this.lookupResult.bookingCode + '?'))
+                return; this.cancelLoading = true; try {
+                let r = await fetch('/api/public/bookings/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(this.lookupForm) });
+                let d = await r.json();
+                if (!r.ok)
+                    throw Error(d.error || 'Không thể hủy đơn');
+                const cancelMessage = d.message + ' Số tiền dự kiến hoàn: ' + this.money(d.refundAmount);
+                await this.lookupBooking();
+                this.lookupMessage = cancelMessage;
+            }
+            catch (e) {
+                this.lookupMessage = e.message;
+            }
+            finally {
+                this.cancelLoading = false;
+            } },
+            statusText(s) { return ({ confirmed: 'Đã xác nhận', checked_in: 'Đang lưu trú', checked_out: 'Đã trả phòng', cancelled: 'Đã hủy' })[s] || 'Chưa xác định'; },
+            paymentText(s, m) { const state = ({ unpaid: 'Chưa thanh toán', pending: 'Chờ xác nhận', paid: 'Đã thanh toán', refunded: 'Đã hoàn tiền', partially_refunded: 'Hoàn tiền một phần' })[s] || 'Chưa cập nhật'; const method = ({ cash: 'Tiền mặt', transfer: 'Chuyển khoản QR', card: 'Thẻ ngân hàng', other: 'Khác' })[m] || ''; return method ? state + ' · ' + method : state; },
+            money(n) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n || 0); },
+            date(d) { return d ? new Date(d).toLocaleDateString('vi-VN') : '-'; },
+            roomImage(i) { let a = ['photo-1611892440504-42a792e24d32', 'photo-1590490360182-c33d57733427', 'photo-1566665797739-1674de7a421a', 'photo-1582719478250-c89cae4dc85b', 'photo-1578683010236-d716f9a3f461']; return 'https://images.unsplash.com/' + a[i % a.length] + '?auto=format&fit=crop&w=1000&q=85'; }
+        };
+    }
+   </script>
+  </div>
+ </body>
+</html>
+

@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="vi">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   StayManager Pro
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js">
+  </script>
+  <style>
+   [x-cloak] {
+  display:none!important
+}
+body {
+  font-family:Inter,system-ui,sans-serif
+}
+.input {
+  width:100%;
+  border:1px solid #cbd5e1;
+  border-radius:.75rem;
+  padding:.65rem .8rem;
+  font-size:.875rem;
+  background:#fff
+}
+.btn {
+  border-radius:.7rem;
+  padding:.6rem .9rem;
+  font-size:.875rem;
+  font-weight:700
+}
+.card {
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:1rem;
+  box-shadow:0 1px 2px #0000000d
+}
+.nav {
+  width:100%;
+  display:flex;
+  gap:.75rem;
+  align-items:center;
+  padding:.7rem .85rem;
+  border-radius:.7rem;
+  font-size:.875rem
+}
+.badge {
+  padding:.25rem .55rem;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:700
+}
+  </style>
+ </head>
+ <body class="bg-slate-50 text-slate-800" x-data="app()" x-init="init()">
+  <div class="min-h-screen grid place-items-center bg-slate-950 p-4" x-cloak="" x-show="!token">
+   <div class="card p-8 w-full max-w-md">
+    <div class="text-center mb-7">
+     <div class="text-4xl">
+      🏨
+     </div>
+     <h1 class="text-2xl font-bold mt-2">
+      StayManager Pro
+     </h1>
+     <p class="text-sm text-slate-500">
+      Đăng nhập hệ thống quản lý khách sạn
+     </p>
+    </div>
+    <input @keyup.enter="login" class="input mb-3" placeholder="Tài khoản" x-model="loginForm.username"/>
+    <input @keyup.enter="login" class="input mb-3" placeholder="Mật khẩu" type="password" x-model="loginForm.password"/>
+    <button @click="login" class="btn bg-blue-600 text-white w-full">
+     Đăng nhập
+    </button>
+    <p class="text-xs text-slate-400 mt-4 text-center">
+     Đăng nhập bằng tài khoản do quản trị viên cấp.
+    </p>
+   </div>
+  </div>
+  <div class="min-h-screen md:flex" x-cloak="" x-show="token">
+   <aside class="md:w-64 bg-slate-900 text-slate-300 p-4 md:min-h-screen">
+    <div class="flex items-center gap-3 px-2 py-4 border-b border-slate-800 mb-4">
+     <div class="bg-blue-600 p-2 rounded-xl">
+      🏨
+     </div>
+     <div>
+      <b class="text-white" x-text="settings.hotelName||'StayManager Pro'">
+      </b>
+      <div class="text-xs text-slate-500">
+       Hotel Management
+      </div>
+     </div>
+    </div>
+    <a class="mb-4 flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-3 text-amber-300 hover:bg-amber-500/20" href="/hotel.html" target="_blank">
+     🌐
+     <span>
+      Xem website khách sạn
+     </span>
+    </a>
+    <nav class="space-y-1">
+     <template x-for="n in nav">
+      <a x-show="canSee(n.id)" :class="tab===n.id?'bg-blue-700 text-white':'hover:bg-slate-800'" :href="'/'+n.id" @click.prevent="go(n.id)" class="nav">
+       <span x-text="n.icon">
+       </span>
+       <span x-text="n.name">
+       </span>
+       <span class="ml-auto bg-amber-500 text-white rounded-full px-2 text-xs" x-show="n.id==='housekeeping'&amp;&amp;stats.cleaning" x-text="stats.cleaning">
+       </span>
+      </a>
+     </template>
+    </nav>
+    <div class="mt-8 border-t border-slate-800 pt-4 text-xs">
+     <div class="px-2 mb-2">
+      <b class="text-white" x-text="user?.name">
+      </b>
+      <div x-text="roleText(user?.role)">
+      </div>
+     </div>
+     <button @click="logout" class="nav hover:bg-slate-800">
+      ↪ Đăng xuất
+     </button>
+    </div>
+   </aside>
+   <main class="flex-1 p-4 md:p-8 overflow-auto">
+    <div class="fixed right-5 top-5 z-50 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-xl" x-show="toast" x-text="toast" x-transition="">
+    </div>
+    <section x-show="tab==='dashboard'">
+     <div class="flex flex-wrap justify-between gap-3 items-center mb-6">
+      <div>
+       <h1 class="text-2xl font-bold">
+        Tổng Quan Hoạt Động
+       </h1>
+       <p class="text-sm text-slate-500">
+        Tình hình khách sạn hôm nay
+       </p>
+      </div>
+      <button @click="tab='booking'" class="btn bg-blue-600 text-white">
+       + Tạo đặt phòng
+      </button>
+     </div>
+     <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <template x-for="c in cards">
+       <div class="card p-5">
+        <div class="text-xs uppercase text-slate-400 font-bold" x-text="c.name">
+        </div>
+        <div class="text-2xl font-bold mt-2" x-text="c.value">
+        </div>
+        <div class="text-xs text-slate-400 mt-1" x-text="c.sub">
+        </div>
+       </div>
+      </template>
+     </div>
+     <div class="grid xl:grid-cols-3 gap-5 mt-5">
+      <div class="card p-6 xl:col-span-2">
+       <div class="flex justify-between">
+        <h2 class="font-bold">
+         Doanh thu đã thu · 6 tháng
+        </h2>
+        <span class="text-sm text-slate-500" x-text="money(stats.revenue)">
+        </span>
+       </div>
+       <div class="h-72 mt-4">
+        <canvas id="chart">
+        </canvas>
+       </div>
+      </div>
+      <div class="card p-5">
+       <h2 class="font-bold mb-4">
+        Việc cần xử lý hôm nay
+       </h2>
+       <div class="space-y-3">
+        <button @click="tab='bookings'" class="w-full text-left p-3 bg-blue-50 rounded-xl">
+         <b x-text="stats.todayArrivals||0">
+         </b>
+         khách dự kiến đến hôm nay
+        </button>
+        <button @click="tab='bookings'" class="w-full text-left p-3 bg-violet-50 rounded-xl">
+         <b x-text="stats.todayDepartures||0">
+         </b>
+         khách dự kiến trả phòng
+        </button>
+        <button @click="tab='housekeeping'" class="w-full text-left p-3 bg-amber-50 rounded-xl">
+         <b x-text="stats.cleaning||0">
+         </b>
+         phòng đang chờ dọn
+        </button>
+        <div class="p-3 bg-rose-50 rounded-xl">
+         <b x-text="stats.maintenance||0">
+         </b>
+         phòng đang bảo trì
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="grid lg:grid-cols-2 gap-5 mt-5">
+      <div class="card p-5">
+       <h2 class="font-bold mb-3">
+        Tình trạng phòng
+       </h2>
+       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="p-3 rounded-xl bg-blue-50">
+         <small>
+          Trống
+         </small>
+         <b class="block text-xl" x-text="stats.available||0">
+         </b>
+        </div>
+        <div class="p-3 rounded-xl bg-blue-50">
+         <small>
+          Đang ở
+         </small>
+         <b class="block text-xl" x-text="stats.occupied||0">
+         </b>
+        </div>
+        <div class="p-3 rounded-xl bg-amber-50">
+         <small>
+          Đang dọn
+         </small>
+         <b class="block text-xl" x-text="stats.cleaning||0">
+         </b>
+        </div>
+        <div class="p-3 rounded-xl bg-rose-50">
+         <small>
+          Bảo trì
+         </small>
+         <b class="block text-xl" x-text="stats.maintenance||0">
+         </b>
+        </div>
+       </div>
+      </div>
+      <div class="card p-5">
+       <h2 class="font-bold mb-3">
+        Booking gần đây
+       </h2>
+       <template x-for="b in bookings.slice(0,4)">
+        <div class="flex justify-between gap-3 py-2 border-t">
+         <div>
+          <b x-text="b.customerName">
+          </b>
+          <div class="text-xs text-slate-500" x-text="'Phòng '+(b.roomId?.roomNumber||'-')+' · '+date(b.checkInDate)">
+          </div>
+         </div>
+         <span :class="statusClass(b.status)" class="badge h-fit" x-text="statusText(b.status)">
+         </span>
+        </div>
+       </template>
+      </div>
+     </div>
+    </section>
+    <section x-show="tab==='booking'">
+     <h1 class="text-2xl font-bold mb-6">
+      Đặt Phòng Mới
+     </h1>
+     <div class="card p-6 max-w-4xl">
+      <div class="grid md:grid-cols-2 gap-4">
+       <input class="input" placeholder="Họ tên khách *" x-model="form.customerName"/>
+       <input class="input" placeholder="Số điện thoại *" x-model="form.customerPhone"/>
+       <input class="input" placeholder="Email" x-model="form.customerEmail"/>
+       <input class="input" placeholder="CCCD / Hộ chiếu" x-model="form.idNumber"/>
+       <label class="text-xs font-bold">
+        Check-in
+        <input @change="available()" class="input mt-1" type="date" x-model="form.checkInDate"/>
+       </label>
+       <label class="text-xs font-bold">
+        Check-out
+        <input @change="available()" class="input mt-1" type="date" x-model="form.checkOutDate"/>
+       </label>
+       <select class="input" x-model="form.roomId">
+        <option value="">
+         Chọn phòng trống *
+        </option>
+        <template x-for="r in availableRooms">
+         <option :value="r._id" x-text="r.roomNumber+' · '+r.type+' · '+money(r.price)+'/đêm'">
+         </option>
+        </template>
+       </select>
+       <input class="input" min="1" placeholder="Số khách" type="number" x-model.number="form.guests"/>
+       <select class="input" x-model.number="form.seasonFactor">
+        <option value="1">
+         Ngày thường x1.0
+        </option>
+        <option value="1.2">
+         Cuối tuần x1.2
+        </option>
+        <option value="1.5">
+         Cao điểm x1.5
+        </option>
+       </select>
+       <input class="input" placeholder="Tiền cọc" type="number" x-model.number="form.deposit"/>
+      </div>
+      <textarea class="input mt-4" placeholder="Ghi chú" x-model="form.notes"></textarea>
+      <button @click="createBooking" class="btn bg-blue-600 text-white mt-4">
+       Xác nhận đặt phòng
+      </button>
+     </div>
+    </section>
+    <section x-show="tab==='bookings'">
+     <div class="flex flex-wrap justify-between gap-3 mb-5">
+      <h1 class="text-2xl font-bold">
+       Bookings / Check-in-out
+      </h1>
+      <input class="input max-w-xs" placeholder="Tìm khách / SĐT / phòng" x-model="search"/>
+     </div>
+     <div class="card overflow-x-auto">
+      <table class="w-full text-sm">
+       <thead class="bg-slate-50">
+        <tr>
+         <template x-for="h in ['Khách hàng','Phòng','Lưu trú','Tổng tiền','Đã thu','Còn lại','Trạng thái','Thao tác']">
+          <th class="p-3 text-left whitespace-nowrap" x-text="h">
+          </th>
+         </template>
+        </tr>
+       </thead>
+       <tbody>
+        <template :key="b._id" x-for="b in filteredBookings">
+         <tr class="border-t">
+          <td class="p-3">
+           <b x-text="b.customerName">
+           </b>
+           <div class="text-xs text-slate-500" x-text="b.customerPhone">
+           </div>
+          </td>
+          <td class="p-3" x-text="b.roomId?.roomNumber||'N/A'">
+          </td>
+          <td class="p-3 text-xs whitespace-nowrap" x-text="date(b.checkInDate)+' → '+date(b.checkOutDate)">
+          </td>
+          <td class="p-3 font-bold" x-text="money(b.totalAmount)">
+          </td>
+          <td class="p-3" x-text="money(b.paidAmount)">
+          </td>
+          <td class="p-3" x-text="money(Math.max(0,b.totalAmount-b.paidAmount))">
+          </td>
+          <td class="p-3">
+           <span :class="statusClass(b.status)" class="badge" x-text="statusText(b.status)">
+           </span>
+          </td>
+          <td class="p-3">
+           <div class="flex flex-wrap gap-1">
+            <button @click="action(b._id,'checkin')" class="btn bg-blue-50 text-blue-700" x-show="b.status==='confirmed'">
+             Check-in
+            </button>
+            <button @click="selected=b;tab='services'" class="btn bg-amber-50 text-amber-700" x-show="b.status==='checked_in'">
+             + Dịch vụ
+            </button>
+            <button @click="checkout(b)" class="btn bg-blue-50 text-blue-700" x-show="b.status==='checked_in'">
+             Check-out
+            </button>
+            <button @click="confirmTransfer(b)" class="btn bg-blue-50 text-blue-700" x-show="b.paymentMethod==='transfer' && b.paymentStatus!=='paid'">
+             Xác nhận đã nhận QR
+            </button>
+            <button @click="invoice(b)" class="btn bg-slate-100">
+             Hóa đơn
+            </button>
+            <button @click="action(b._id,'cancel')" class="btn bg-red-50 text-red-700" x-show="b.status==='confirmed'">
+             Hủy
+            </button>
+           </div>
+          </td>
+         </tr>
+        </template>
+       </tbody>
+      </table>
+     </div>
+    </section>
+    <section x-show="tab==='calendar'">
+     <h1 class="text-2xl font-bold mb-5">
+      Lịch Phòng 14 Ngày
+     </h1>
+     <div class="card overflow-x-auto">
+      <table class="w-full text-sm">
+       <thead>
+        <tr class="bg-slate-50">
+         <th class="p-3">
+          Phòng
+         </th>
+         <template x-for="d in calendarDays">
+          <th class="p-3 whitespace-nowrap" x-text="shortDate(d)">
+          </th>
+         </template>
+        </tr>
+       </thead>
+       <tbody>
+        <template x-for="r in rooms">
+         <tr class="border-t">
+          <td class="p-3 font-bold" x-text="r.roomNumber">
+          </td>
+          <template x-for="d in calendarDays">
+           <td class="p-2">
+            <div :class="bookingOn(r._id,d)?'bg-blue-500':'bg-slate-100'" :title="bookingOn(r._id,d)?.customerName||'Trống'" class="h-8 rounded-lg">
+            </div>
+           </td>
+          </template>
+         </tr>
+        </template>
+       </tbody>
+      </table>
+     </div>
+    </section>
+    <section x-show="tab==='rooms'">
+     <div class="flex justify-between mb-5">
+      <h1 class="text-2xl font-bold">
+       Phòng &amp; Loại Phòng
+      </h1>
+      <button x-show="user?.role==='admin' || user?.role==='manager'" @click="roomModal=true" class="btn bg-blue-700 text-white">
+       + Thêm phòng
+      </button>
+     </div>
+     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <template x-for="r in rooms">
+       <div class="card p-5">
+        <div class="flex justify-between">
+         <b class="text-xl" x-text="'Phòng '+r.roomNumber">
+         </b>
+         <span :class="roomDisplayClass(r)" class="badge" x-text="roomStatus(r.displayStatus || r.status)">
+         </span>
+        </div>
+        <p class="text-slate-500 mt-2" x-text="r.type+' · '+r.capacity+' khách · Tầng '+r.floor">
+        </p>
+        <p class="text-blue-600 font-bold mt-2" x-text="money(r.price)+'/đêm'">
+        </p>
+        <div class="mt-4 flex gap-2">
+         <select x-show="user?.role==='admin' || user?.role==='manager'" :value="r.status" @change="updateRoom(r,{status:$event.target.value})" class="input">
+          <option value="available">
+           Sẵn sàng
+          </option>
+          <option value="cleaning">
+           Đang dọn
+          </option>
+          <option value="maintenance">
+           Bảo trì
+          </option>
+         </select>
+         <button x-show="user?.role==='admin'" @click="deleteRoom(r)" class="btn bg-red-50 text-red-600">
+          Xóa
+         </button>
+        </div>
+       </div>
+      </template>
+     </div>
+    </section>
+    <section x-show="tab==='housekeeping'">
+     <h1 class="text-2xl font-bold mb-5">
+      Housekeeping · Dọn Phòng
+     </h1>
+     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <template x-for="r in rooms.filter(x=&gt;x.status==='cleaning')">
+       <div class="card p-5">
+        <div class="text-xs text-amber-600 font-bold">
+         CHỜ DỌN
+        </div>
+        <h2 class="text-2xl font-bold mt-1" x-text="'Phòng '+r.roomNumber">
+        </h2>
+        <p class="text-slate-500" x-text="r.type+' · Tầng '+r.floor">
+        </p>
+        <button @click="markClean(r)" class="btn bg-blue-600 text-white mt-5 w-full">
+         ✓ Đã dọn xong · Mở phòng
+        </button>
+       </div>
+      </template>
+      <div class="card p-8 text-center text-slate-500" x-show="!rooms.some(x=&gt;x.status==='cleaning')">
+       Không có phòng nào đang chờ dọn 🎉
+      </div>
+     </div>
+    </section>
+    <section x-show="tab==='customers'">
+     <h1 class="text-2xl font-bold mb-5">
+      Khách Hàng
+     </h1>
+     <div class="card overflow-x-auto">
+      <table class="w-full text-sm">
+       <thead class="bg-slate-50">
+        <tr>
+         <th class="p-3 text-left">
+          Họ tên
+         </th>
+         <th class="p-3 text-left">
+          Điện thoại
+         </th>
+         <th class="p-3 text-left">
+          Email
+         </th>
+         <th class="p-3 text-left">
+          CCCD/Hộ chiếu
+         </th>
+        </tr>
+       </thead>
+       <tbody>
+        <template x-for="c in customers">
+         <tr class="border-t">
+          <td class="p-3 font-bold" x-text="c.name">
+          </td>
+          <td class="p-3" x-text="c.phone">
+          </td>
+          <td class="p-3" x-text="c.email||'-'">
+          </td>
+          <td class="p-3" x-text="c.idNumber||'-'">
+          </td>
+         </tr>
+        </template>
+       </tbody>
+      </table>
+     </div>
+    </section>
+    <section x-show="tab==='services'">
+     <h1 class="text-2xl font-bold mb-5">
+      Dịch Vụ &amp; Phụ Thu
+     </h1>
+     <div class="grid lg:grid-cols-2 gap-5">
+      <div class="card p-5">
+       <h2 class="font-bold mb-3">
+        Danh mục dịch vụ
+       </h2>
+       <div class="grid grid-cols-[1fr_140px_auto] gap-2">
+        <input class="input" placeholder="Tên dịch vụ" x-model="serviceForm.name"/>
+        <input class="input" placeholder="Giá" type="number" x-model.number="serviceForm.price"/>
+        <button @click="addService" class="btn bg-blue-600 text-white">
+         Thêm
+        </button>
+       </div>
+       <template x-for="s in services">
+        <div class="flex justify-between border-t py-3 mt-3">
+         <span x-text="s.name">
+         </span>
+         <b x-text="money(s.price)">
+         </b>
+        </div>
+       </template>
+      </div>
+      <div class="card p-5">
+       <h2 class="font-bold">
+        Ghi dịch vụ cho khách đang ở
+       </h2>
+       <select class="input mt-3" x-model="selectedId">
+        <option value="">
+         Chọn booking đang ở
+        </option>
+        <template x-for="b in bookings.filter(x=&gt;x.status==='checked_in')">
+         <option :value="b._id" x-text="b.customerName+' · Phòng '+b.roomId?.roomNumber">
+         </option>
+        </template>
+       </select>
+       <select class="input mt-3" x-model="serviceUse.serviceId">
+        <option value="">
+         Chọn dịch vụ
+        </option>
+        <template x-for="s in services">
+         <option :value="s._id" x-text="s.name+' - '+money(s.price)">
+         </option>
+        </template>
+       </select>
+       <input class="input mt-2" min="1" type="number" x-model.number="serviceUse.quantity"/>
+       <button @click="useService" class="btn bg-blue-600 text-white mt-2">
+        Ghi dịch vụ
+       </button>
+      </div>
+     </div>
+    </section>
+    <section x-show="tab==='users' && user?.role==='admin'">
+     <h1 class="text-2xl font-bold mb-2">Tài khoản & phân quyền</h1>
+     <p class="text-sm text-slate-500 mb-5">Tạo tài khoản riêng cho quản lý, lễ tân và buồng phòng. Mật khẩu tối thiểu 8 ký tự.</p>
+     <div class="card p-5 mb-5">
+      <h2 class="font-bold mb-3">Tạo tài khoản nhân viên</h2>
+      <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-3">
+       <input class="input" placeholder="Họ và tên" x-model="userForm.name"/>
+       <input class="input" placeholder="Tên đăng nhập" x-model="userForm.username"/>
+       <input class="input" placeholder="Mật khẩu (ít nhất 8 ký tự)" type="password" x-model="userForm.password"/>
+       <select class="input" x-model="userForm.role"><option value="manager">Quản lý</option><option value="receptionist">Lễ tân</option><option value="housekeeping">Buồng phòng</option></select>
+      </div>
+      <button @click="addUser" class="btn bg-blue-700 text-white mt-3">Tạo tài khoản</button>
+     </div>
+     <div class="card overflow-x-auto">
+      <table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="p-3 text-left">Nhân viên</th><th class="p-3 text-left">Tên đăng nhập</th><th class="p-3 text-left">Vai trò</th><th class="p-3 text-left">Trạng thái</th><th class="p-3">Thao tác</th></tr></thead>
+       <tbody><template x-for="u in users" :key="u._id"><tr class="border-t"><td class="p-3 font-semibold" x-text="u.name"></td><td class="p-3" x-text="u.username"></td><td class="p-3" x-text="roleText(u.role)"></td><td class="p-3" x-text="u.active?'Đang hoạt động':'Đã khóa'"></td><td class="p-3"><button x-show="u.role!=='admin'" @click="toggleUser(u)" class="btn" :class="u.active?'bg-rose-50 text-rose-700':'bg-blue-50 text-blue-700'" x-text="u.active?'Khóa':'Mở khóa'"></button></td></tr></template></tbody>
+      </table>
+     </div>
+    </section>
+    <section x-show="tab==='reports'">
+     <h1 class="text-2xl font-bold mb-5">
+      Báo Cáo
+     </h1>
+     <div class="grid md:grid-cols-4 gap-4">
+      <div class="card p-5">
+       <small>
+        Doanh thu đã thu
+       </small>
+       <div class="text-xl font-bold" x-text="money(stats.revenue)">
+       </div>
+      </div>
+      <div class="card p-5">
+       <small>
+        Doanh thu dự kiến
+       </small>
+       <div class="text-xl font-bold" x-text="money(stats.expected)">
+       </div>
+      </div>
+      <div class="card p-5">
+       <small>
+        Công suất hiện tại
+       </small>
+       <div class="text-xl font-bold" x-text="(stats.occupancyRate||0)+'%'">
+       </div>
+      </div>
+      <div class="card p-5">
+       <small>
+        Tổng booking
+       </small>
+       <div class="text-xl font-bold" x-text="stats.bookings||0">
+       </div>
+      </div>
+     </div>
+     <div class="card p-5 mt-5 overflow-x-auto">
+      <h2 class="font-bold mb-3">
+       Tổng hợp booking
+      </h2>
+      <table class="w-full text-sm">
+       <thead>
+        <tr class="bg-slate-50">
+         <th class="p-2 text-left">
+          Trạng thái
+         </th>
+         <th class="p-2 text-right">
+          Số lượng
+         </th>
+         <th class="p-2 text-right">
+          Giá trị
+         </th>
+        </tr>
+       </thead>
+       <tbody>
+        <template x-for="s in ['confirmed','checked_in','checked_out','cancelled']">
+         <tr class="border-t">
+          <td class="p-2" x-text="statusText(s)">
+          </td>
+          <td class="p-2 text-right" x-text="bookings.filter(x=&gt;x.status===s).length">
+          </td>
+          <td class="p-2 text-right" x-text="money(bookings.filter(x=&gt;x.status===s).reduce((a,x)=&gt;a+x.totalAmount,0))">
+          </td>
+         </tr>
+        </template>
+       </tbody>
+      </table>
+     </div>
+    </section>
+    <section x-show="tab==='promotions'">
+     <div class="flex flex-wrap justify-between items-end gap-3 mb-6">
+      <div>
+       <h1 class="text-2xl font-bold">
+        Ưu đãi &amp; Mã khuyến mãi
+       </h1>
+       <p class="text-sm text-slate-500 mt-1">
+        Tạo mã giảm giá hiển thị trên website khách hàng.
+       </p>
+      </div>
+      <a class="btn border border-amber-500 text-amber-700" href="/hotel.html#offers" target="_blank">
+       Xem ưu đãi trên website ↗
+      </a>
+     </div>
+     <div class="grid xl:grid-cols-3 gap-5">
+      <div class="card p-5 xl:col-span-1">
+       <h2 class="font-bold text-lg mb-4">
+        Tạo mã mới
+       </h2>
+       <div class="space-y-3">
+        <label class="block text-xs font-bold">
+         MÃ KHUYẾN MÃI
+         <input class="input mt-1 uppercase" placeholder="WELCOME10" x-model="promotionForm.code"/>
+        </label>
+        <label class="block text-xs font-bold">
+         TÊN ƯU ĐÃI
+         <input class="input mt-1" placeholder="Ưu đãi khách mới" x-model="promotionForm.title"/>
+        </label>
+        <label class="block text-xs font-bold">
+         MÔ TẢ
+         <input class="input mt-1" placeholder="Áp dụng khi đặt trực tiếp" x-model="promotionForm.description"/>
+        </label>
+        <div class="grid grid-cols-2 gap-3">
+         <label class="block text-xs font-bold">
+          KIỂU GIẢM
+          <select class="input mt-1" x-model="promotionForm.type">
+           <option value="percent">
+            Phần trăm (%)
+           </option>
+           <option value="fixed">
+            Số tiền (₫)
+           </option>
+          </select>
+         </label>
+         <label class="block text-xs font-bold">
+          GIÁ TRỊ GIẢM
+          <input class="input mt-1" min="1" type="number" x-model.number="promotionForm.value"/>
+         </label>
+         <label class="block text-xs font-bold">
+          GIẢM TỐI ĐA (₫)
+          <input class="input mt-1" min="0" type="number" x-model.number="promotionForm.maxDiscount"/>
+         </label>
+         <label class="block text-xs font-bold">
+          ĐƠN TỐI THIỂU (₫)
+          <input class="input mt-1" min="0" type="number" x-model.number="promotionForm.minAmount"/>
+         </label>
+         <label class="block text-xs font-bold">
+          BẮT ĐẦU
+          <input class="input mt-1" type="date" x-model="promotionForm.startsAt"/>
+         </label>
+         <label class="block text-xs font-bold">
+          HẾT HẠN
+          <input class="input mt-1" type="date" x-model="promotionForm.expiresAt"/>
+         </label>
+         <label class="block text-xs font-bold col-span-2">
+          SỐ LƯỢT SỬ DỤNG
+          <input class="input mt-1" min="1" type="number" x-model.number="promotionForm.usageLimit"/>
+         </label>
+        </div>
+        <button @click="addPromotion" class="btn bg-blue-600 text-white w-full">
+         + Tạo mã khuyến mãi
+        </button>
+       </div>
+      </div>
+      <div class="card p-5 xl:col-span-2 overflow-x-auto">
+       <h2 class="font-bold text-lg mb-4">
+        Danh sách mã
+       </h2>
+       <table class="w-full text-sm text-left">
+        <thead>
+         <tr class="border-b text-slate-500">
+          <th class="p-3">
+           Mã / Tên ưu đãi
+          </th>
+          <th class="p-3">
+           Giảm giá
+          </th>
+          <th class="p-3">
+           Lượt dùng
+          </th>
+          <th class="p-3">
+           Trạng thái
+          </th>
+          <th class="p-3">
+           Thao tác
+          </th>
+         </tr>
+        </thead>
+        <tbody>
+         <template :key="p._id" x-for="p in promotions">
+          <tr class="border-b">
+           <td class="p-3">
+            <b class="font-mono" x-text="p.code">
+            </b>
+            <div class="text-xs text-slate-500" x-text="p.title">
+            </div>
+            <div class="text-xs text-slate-400" x-text="'Hạn: '+date(p.expiresAt)">
+            </div>
+           </td>
+           <td class="p-3" x-text="p.type==='percent'?p.value+'%':'− '+money(p.value)">
+           </td>
+           <td class="p-3" x-text="p.usedCount+' / '+p.usageLimit">
+           </td>
+           <td class="p-3">
+            <span :class="p.active?'bg-blue-100 text-blue-700':'bg-slate-100 text-slate-500'" class="badge" x-text="p.active?'Đang bật':'Đã tắt'">
+            </span>
+           </td>
+           <td class="p-3 whitespace-nowrap">
+            <button @click="togglePromotion(p)" class="text-blue-700 mr-2" x-text="p.active?'Tắt':'Bật'">
+            </button>
+            <button @click="deletePromotion(p)" class="text-rose-600">
+             Xóa
+            </button>
+           </td>
+          </tr>
+         </template>
+        </tbody>
+       </table>
+       <p class="text-center text-slate-400 py-8" x-show="promotions.length===0">
+        Chưa có mã khuyến mãi nào.
+       </p>
+      </div>
+     </div>
+    </section>
+    <section x-show="tab==='settings'">
+     <h1 class="text-2xl font-bold mb-5">
+      Cài Đặt Khách Sạn
+     </h1>
+     <div class="card p-6 max-w-3xl">
+      <div class="grid md:grid-cols-2 gap-4">
+       <label class="text-xs font-bold">
+        Tên khách sạn
+        <input class="input mt-1" x-model="settings.hotelName"/>
+       </label>
+       <label class="text-xs font-bold">
+        Điện thoại
+        <input class="input mt-1" x-model="settings.phone"/>
+       </label>
+       <label class="text-xs font-bold">
+        Email
+        <input class="input mt-1" x-model="settings.email"/>
+       </label>
+       <label class="text-xs font-bold">
+        Địa chỉ
+        <input class="input mt-1" x-model="settings.address"/>
+       </label>
+       <label class="text-xs font-bold">
+        Giờ check-in
+        <input class="input mt-1" type="time" x-model="settings.checkInTime"/>
+       </label>
+       <label class="text-xs font-bold">
+        Giờ check-out
+        <input class="input mt-1" type="time" x-model="settings.checkOutTime"/>
+       </label>
+       <label class="text-xs font-bold">
+        Thuế (%)
+        <input class="input mt-1" type="number" x-model.number="settings.taxPercent"/>
+       </label>
+       <label class="text-xs font-bold">
+        Tiền tố hóa đơn
+        <input class="input mt-1" x-model="settings.invoicePrefix"/>
+       </label>
+      </div>
+      <button @click="saveSettings" class="btn bg-blue-600 text-white mt-5">
+       Lưu cài đặt
+      </button>
+     </div>
+    </section>
+    <div class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-40" x-cloak="" x-show="roomModal">
+     <div class="card p-6 w-full max-w-lg">
+      <h2 class="font-bold text-xl mb-4">
+       Thêm phòng
+      </h2>
+      <div class="grid grid-cols-2 gap-3">
+       <input class="input" placeholder="Số phòng" x-model="roomForm.roomNumber"/>
+       <input class="input" placeholder="Loại phòng" x-model="roomForm.type"/>
+       <input class="input" placeholder="Giá/đêm" type="number" x-model.number="roomForm.price"/>
+       <input class="input" placeholder="Sức chứa" type="number" x-model.number="roomForm.capacity"/>
+       <input class="input" placeholder="Tầng" type="number" x-model.number="roomForm.floor"/>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+       <button @click="roomModal=false" class="btn">
+        Đóng
+       </button>
+       <button @click="addRoom" class="btn bg-blue-600 text-white">
+        Lưu phòng
+       </button>
+      </div>
+     </div>
+    </div>
+   </main>
+  </div>
+  <script>
+   const API = '/api';
+    function app() {
+        return {
+            tab: (['dashboard', 'booking', 'calendar', 'bookings', 'rooms', 'housekeeping', 'customers', 'services', 'promotions', 'reports', 'settings', 'users'].includes(location.pathname.split('/')[1]) ? location.pathname.split('/')[1] : 'dashboard'),
+            toast: '',
+            token: localStorage.getItem('sm_token') || '',
+            user: JSON.parse(localStorage.getItem('sm_user') || 'null'),
+            loginForm: {
+                username: 'anhkhoa',
+                password: ''
+            },
+            rooms: [],
+            availableRooms: [],
+            bookings: [],
+            customers: [],
+            services: [],
+            stats: {},
+            settings: {},
+            selectedId: '',
+            users: [],
+            userForm: { name: '', username: '', password: '', role: 'receptionist' },
+            roomModal: false,
+            chart: null,
+            search: '',
+            nav: [{
+                    id: 'dashboard', icon: '▦', name: 'Tổng Quan'
+                }, {
+                    id: 'booking', icon: '＋', name: 'Đặt Phòng Mới'
+                }, {
+                    id: 'calendar', icon: '▣', name: 'Lịch Phòng'
+                }, {
+                    id: 'bookings', icon: '☷', name: 'Bookings / Check-in-out'
+                }, {
+                    id: 'rooms', icon: '▤', name: 'Phòng & Loại Phòng'
+                }, {
+                    id: 'housekeeping', icon: '🧹', name: 'Housekeeping'
+                }, {
+                    id: 'customers', icon: '♙', name: 'Khách Hàng'
+                }, {
+                    id: 'services', icon: '◇', name: 'Dịch Vụ & Phụ Thu'
+                }, {
+                    id: 'promotions', icon: '🎟️', name: 'Ưu Đãi & Mã Giảm Giá'
+                }, {
+                    id: 'reports', icon: '↗', name: 'Báo Cáo'
+                }, {
+                    id: 'settings', icon: '⚙', name: 'Cài Đặt'
+                }, {
+                    id: 'users', icon: '♙', name: 'Tài Khoản & Phân Quyền'
+                }],
+            promotions: [],
+            promotionForm: { code: 'WELCOME10', title: 'Ưu đãi khách mới', description: 'Ưu đãi dành cho khách đặt phòng trực tiếp.', type: 'percent', value: 10, maxDiscount: 300000, minAmount: 500000, startsAt: new Date().toISOString().slice(0, 10), expiresAt: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10), usageLimit: 100, active: true },
+            form: {
+                customerName: '',
+                customerPhone: '',
+                customerEmail: '',
+                idNumber: '',
+                roomId: '',
+                checkInDate: new Date().toISOString().slice(0, 10),
+                checkOutDate: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+                guests: 1,
+                seasonFactor: 1,
+                deposit: 0,
+                notes: ''
+            },
+            roomForm: {
+                roomNumber: '',
+                type: 'Standard',
+                price: 500000,
+                capacity: 2,
+                floor: 1
+            },
+            serviceForm: {
+                name: '',
+                price: 0
+            },
+            serviceUse: {
+                serviceId: '',
+                quantity: 1
+            },
+            async init() {
+                window.addEventListener('popstate', () => {
+                    const id = location.pathname.split('/')[1];
+                    this.tab = this.nav.some(n => n.id === id) ? id : 'dashboard';
+                    if (this.tab === 'dashboard')
+                        this.$nextTick(() => this.draw());
+                });
+                if (this.token) {
+                    try {
+                        await this.reload();
+                        await this.available();
+                    }
+                    catch (e) {
+                        if (e.message === 'AUTH')
+                            this.clearAuth();
+                    }
+                }
+            },
+            headers() {
+                return {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + this.token
+                };
+            },
+            async login() {
+                try {
+                    let r = await fetch(API + '/auth/login', {
+                        method: 'POST', headers: {
+                            'Content-Type': 'application/json'
+                        }, body: JSON.stringify(this.loginForm)
+                    }), d = await r.json();
+                    if (!r.ok)
+                        throw Error(d.error);
+                    this.token = d.token;
+                    this.user = d.user;
+                    localStorage.setItem('sm_token', d.token);
+                    localStorage.setItem('sm_user', JSON.stringify(d.user));
+                    await this.reload();
+                    await this.available();
+                }
+                catch (e) {
+                    this.msg(e.message);
+                }
+            },
+            clearAuth() {
+                this.token = '';
+                this.user = null;
+                localStorage.removeItem('sm_token');
+                localStorage.removeItem('sm_user');
+            },
+            async logout() {
+                try {
+                    await this.send('/logout');
+                }
+                catch (e) {
+                }
+                this.clearAuth();
+            },
+            async get(p) {
+                let r = await fetch(API + p, {
+                    headers: this.headers()
+                });
+                if (r.status === 401) {
+                    this.clearAuth();
+                    throw Error('AUTH');
+                }
+                let d = await r.json();
+                if (!r.ok)
+                    throw Error(d.error || 'Có lỗi');
+                return d;
+            },
+            async send(p, method = 'POST', body = {}) {
+                let r = await fetch(API + p, {
+                    method, headers: this.headers(), body: JSON.stringify(body)
+                });
+                if (r.status === 401) {
+                    this.clearAuth();
+                    throw Error('Vui lòng đăng nhập');
+                }
+                let d = await r.json();
+                if (!r.ok)
+                    throw Error(d.error || 'Có lỗi xảy ra');
+                return d;
+            },
+            async reload() {
+                if (this.user?.role === 'housekeeping') {
+                    this.rooms = await this.get('/rooms');
+                    this.bookings = []; this.customers = []; this.services = [];
+                    this.stats = { cleaning: this.rooms.filter(r => r.status === 'cleaning').length };
+                    this.settings = {}; this.promotions = []; this.users = [];
+                    return;
+                }
+                [this.rooms, this.bookings, this.customers, this.services, this.stats, this.settings, this.promotions] = await Promise.all(['/rooms', '/bookings', '/customers', '/services', '/stats', '/settings', '/promotions'].map(x => this.get(x)));
+                if (this.user?.role === 'admin') this.users = await this.get('/users');
+                if (this.tab === 'dashboard') this.$nextTick(() => this.draw());
+            },
+            canSee(id) {
+                const role = this.user?.role;
+                if (id === 'users' || id === 'settings') return role === 'admin';
+                if (role === 'housekeeping') return ['rooms', 'housekeeping'].includes(id);
+                if (role === 'receptionist') return ['dashboard', 'booking', 'calendar', 'bookings', 'rooms', 'housekeeping', 'customers', 'services'].includes(id);
+                return true;
+            },
+            go(id) {
+                if (!this.nav.some(n => n.id === id) || !this.canSee(id))
+                    return;
+                if (location.pathname !== '/' + id)
+                    history.pushState({ tab: id }, '', '/' + id);
+                this.tab = id;
+                if (id === 'dashboard')
+                    this.$nextTick(() => this.draw());
+            },
+            async available() {
+                if (!this.token)
+                    return;
+                try {
+                    this.availableRooms = await this.get('/rooms/available?checkIn=' + this.form.checkInDate + '&checkOut=' + this.form.checkOutDate);
+                    if (!this.availableRooms.some(r => r._id === this.form.roomId))
+                        this.form.roomId = this.availableRooms[0]?._id || '';
+                }
+                catch (e) {
+                    this.availableRooms = [];
+                }
+            },
+            msg(s) {
+                this.toast = s;
+                setTimeout(() => this.toast = '', 2800);
+            },
+            async createBooking() {
+                try {
+                    await this.send('/bookings', 'POST', this.form);
+                    this.msg('Đặt phòng thành công');
+                    this.form.customerName = '';
+                    this.form.customerPhone = '';
+                    await this.reload();
+                    await this.available();
+                    this.tab = 'bookings';
+                }
+                catch (e) {
+                    this.msg(e.message);
+                }
+            },
+            async action(id, a) {
+                try {
+                    if (a === 'cancel' && !confirm('Xác nhận hủy booking?'))
+                        return;
+                    let d = await this.send('/bookings/' + id + '/' + a);
+                    this.msg(a === 'checkin' ? 'Check-in thành công' : 'Đã hủy, hoàn dự kiến ' + this.money(d.cancellation_detail?.refund_amount));
+                    await this.reload();
+                }
+                catch (e) {
+                    this.msg(e.message);
+                }
+            },
+            async confirmTransfer(b) {
+                const remaining = Math.max(0, Number(b.totalAmount || 0) - Number(b.paidAmount || 0));
+                if (!confirm('Bạn đã kiểm tra tài khoản ngân hàng và xác nhận đã nhận đủ ' + this.money(remaining) + ' từ khách ' + b.customerName + '?')) return;
+                try {
+                    await this.send('/bookings/' + b._id + '/payment', 'POST', { amount: remaining, method: 'transfer' });
+                    this.msg('Đã xác nhận nhận tiền QR. Trạng thái thanh toán đã cập nhật.');
+                    await this.reload();
+                } catch (e) { this.msg(e.message); }
+            },
+            async checkout(b) {
+                const remaining = Math.max(0, Number(b.totalAmount || 0) - Number(b.paidAmount || 0));
+                if (!confirm(remaining > 0
+                    ? 'Xác nhận khách đã thực trả ' + this.money(remaining) + ' bằng tiền mặt và tiến hành check-out?'
+                    : 'Tiến hành check-out?')) return;
+                try {
+                    if (remaining > 0) await this.send('/bookings/' + b._id + '/payment', 'POST', { amount: remaining, method: 'cash' });
+                    await this.send('/bookings/' + b._id + '/checkout', 'POST', { payRemaining: false });
+                    this.msg('Check-out thành công · phòng chuyển sang Đang dọn');
+                    await this.reload();
+                } catch (e) { this.msg(e.message); }
+            },
+            async addRoom() {
+                try {
+                    await this.send('/rooms', 'POST', this.roomForm);
+                    this.roomModal = false;
+                    this.msg('Đã thêm phòng');
+                    await this.reload();
+                }
+                catch (e) {
+                    this.msg(e.message);
+                }
+            },
+            async updateRoom(r, x) {
+                try {
+                    await this.send('/rooms/' + r._id, 'PUT', x);
+                    await this.reload();
+                }
+                catch (e) {
+                    this.msg(e.message);
+                }
+            },
+            async markClean(r) {
+                try {
+                    await this.send('/rooms/' + r._id + '/housekeeping');
+                    await this.reload();
+                    this.msg('Phòng ' + r.roomNumber + ' đã được xác nhận vệ sinh');
+                } catch (e) { this.msg(e.message); }
+            },
+            async addUser() {
+                try {
+                    await this.send('/users', 'POST', this.userForm);
+                    this.userForm = { name: '', username: '', password: '', role: 'receptionist' };
+                    this.users = await this.get('/users');
+                    this.msg('Đã tạo tài khoản nhân viên');
+                } catch (e) { this.msg(e.message); }
+            },
+            async toggleUser(u) {
+                try {
+                    await this.send('/users/' + u._id, 'PUT', { active: !u.active });
+                    this.users = await this.get('/users');
+                    this.msg(u.active ? 'Đã khóa tài khoản' : 'Đã mở khóa tài khoản');
+                } catch (e) { this.msg(e.message); }
+            },
+            async deleteRoom(r) {
+                if (!confirm('Xóa phòng ' + r.roomNumber + '?'))
+                    return;
+                try {
+                    await this.send('/rooms/' + r._id, 'DELETE');
+                    await this.reload();
+                }
+                catch (e) {
+                    this.msg(e.message);
+                }
+            },
+            async addService() {
+                try {
+                    await this.send('/services', 'POST', this.serviceForm);
+                    this.serviceForm = {
+                        name: '',
+                        price: 0
+                    };
+                    await this.reload();
+                }
+                catch (e) {
+                    this.msg(e.message);
+                }
+            },
+            async useService() {
+                try {
+                    if (!this.selectedId)
+                        throw Error('Hãy chọn booking đang ở');
+                    await this.send('/bookings/' + this.selectedId + '/services', 'POST', this.serviceUse);
+                    this.msg('Đã thêm dịch vụ');
+                    await this.reload();
+                }
+                catch (e) {
+                    this.msg(e.message);
+                }
+            },
+            async addPromotion() {
+                try {
+                    const payload = { ...this.promotionForm, code: this.promotionForm.code.toUpperCase(), startsAt: new Date(this.promotionForm.startsAt + 'T00:00:00'), expiresAt: new Date(this.promotionForm.expiresAt + 'T23:59:59') };
+                    await this.send('/promotions', 'POST', payload);
+                    this.msg('Đã tạo mã khuyến mãi');
+                    this.promotionForm = { ...this.promotionForm, code: '', title: '', description: '' };
+                    await this.reload();
+                }
+                catch (e) {
+                    this.msg(e.message);
+                }
+            },
+            async togglePromotion(p) {
+                try {
+                    await this.send('/promotions/' + p._id, 'PUT', { active: !p.active });
+                    await this.reload();
+                    this.msg('Đã cập nhật trạng thái mã');
+                }
+                catch (e) {
+                    this.msg(e.message);
+                }
+            },
+            async deletePromotion(p) {
+                if (!confirm('Xóa mã ' + p.code + '?'))
+                    return;
+                try {
+                    await this.send('/promotions/' + p._id, 'DELETE');
+                    await this.reload();
+                    this.msg('Đã xóa mã');
+                }
+                catch (e) {
+                    this.msg(e.message);
+                }
+            },
+            async saveSettings() {
+                try {
+                    this.settings = await this.send('/settings', 'PUT', this.settings);
+                    this.msg('Đã lưu cài đặt');
+                }
+                catch (e) {
+                    this.msg(e.message);
+                }
+            },
+            invoice(b) {
+                let s = this.settings, w = window.open('', '_blank'), items = (b.serviceItems || []).map(x => `<tr><td>${x.name}</td><td>${x.quantity}</td><td>${this.money(x.amount)}</td></tr>`).join('');
+                w.document.write(`<html><head><title>Hóa đơn</title><style>body{font-family:Arial;max-width:760px;margin:40px auto;color:#222}h1{text-align:center}table{width:100%;border-collapse:collapse}td,th{padding:9px;border-bottom:1px solid #ddd;text-align:left}.r{text-align:right}.total{font-size:20px;font-weight:bold}@media print{button{display:none}}</style></head><body><h1>${s.hotelName || 'StayManager Hotel'}</h1><p style="text-align:center">${s.address || ''} ${s.phone ? '· ' + s.phone : ''}</p><hr><h2>HÓA ĐƠN ${s.invoicePrefix || 'HD'}-${b._id.slice(-6).toUpperCase()}</h2><p>Khách hàng: <b>${b.customerName}</b> · ${b.customerPhone}</p><p>Phòng: <b>${b.roomId?.roomNumber || '-'}</b> · ${this.date(b.checkInDate)} → ${this.date(b.checkOutDate)}</p><table><tr><th>Nội dung</th><th>SL</th><th>Thành tiền</th></tr><tr><td>Tiền phòng</td><td>1</td><td>${this.money(b.roomAmount)}</td></tr>${items}</table><p class="r">Giảm giá: ${this.money(b.discount)}</p><p class="r total">Tổng cộng: ${this.money(b.totalAmount)}</p><p class="r">Đã thanh toán: ${this.money(b.paidAmount)}</p><p class="r"><b>Còn lại: ${this.money(Math.max(0, b.totalAmount - b.paidAmount))}</b></p><p>Trạng thái: ${this.statusText(b.status)}</p><button onclick="window.print()">In hóa đơn</button></body></html>`);
+                w.document.close();
+            },
+            get filteredBookings() {
+                let q = this.search.toLowerCase();
+                return this.bookings.filter(b => (b.customerName + ' ' + b.customerPhone + ' ' + (b.roomId?.roomNumber || '')).toLowerCase().includes(q));
+            },
+            get cards() {
+                return [{
+                        name: 'Doanh thu đã thu', value: this.money(this.stats.revenue), sub: 'Tổng tiền đã nhận'
+                    }, {
+                        name: 'Công suất hiện tại', value: (this.stats.occupancyRate || 0) + '%', sub: (this.stats.occupied || 0) + ' phòng đang có khách'
+                    }, {
+                        name: 'Khách đến hôm nay', value: this.stats.todayArrivals || 0, sub: 'Booking chờ check-in'
+                    }, {
+                        name: 'Phòng cần dọn', value: this.stats.cleaning || 0, sub: 'Housekeeping cần xử lý'
+                    }];
+            },
+            get calendarDays() {
+                return Array.from({
+                    length: 14
+                }, (_, i) => new Date(Date.now() + i * 86400000));
+            },
+            bookingOn(roomId, d) {
+                let x = new Date(d);
+                x.setHours(12, 0, 0, 0);
+                return this.bookings.find(b => !['cancelled', 'checked_out'].includes(b.status) && String(b.roomId?._id) === String(roomId) && new Date(b.checkInDate) <= x && new Date(b.checkOutDate) > x);
+            },
+            money(n) {
+                return new Intl.NumberFormat('vi-VN', {
+                    style: 'currency', currency: 'VND', maximumFractionDigits: 0
+                }).format(n || 0);
+            },
+            date(s) {
+                return new Date(s).toLocaleDateString('vi-VN');
+            },
+            shortDate(d) {
+                return d.toLocaleDateString('vi-VN', {
+                    day: '2-digit', month: '2-digit'
+                });
+            },
+            statusText(s) {
+                return ({
+                    confirmed: 'Đã xác nhận', checked_in: 'Đang ở', checked_out: 'Đã trả phòng', cancelled: 'Đã hủy'
+                })[s] || s;
+            },
+            statusClass(s) {
+                return ({
+                    confirmed: 'bg-blue-100 text-blue-700', checked_in: 'bg-amber-100 text-amber-700', checked_out: 'bg-blue-100 text-blue-700', cancelled: 'bg-red-100 text-red-700'
+                })[s];
+            },
+            roomStatus(s) {
+                return ({
+                    available: 'Sẵn sàng', booked: 'Đã đặt', occupied: 'Đang ở', cleaning: 'Đang dọn', maintenance: 'Bảo trì'
+                })[s] || s;
+            },
+            roomDisplayClass(r) {
+                const s = r.displayStatus || r.status;
+                return ({
+                    available: 'bg-blue-100 text-blue-700',
+                    booked: 'bg-blue-100 text-blue-700',
+                    occupied: 'bg-violet-100 text-violet-700',
+                    cleaning: 'bg-amber-100 text-amber-700',
+                    maintenance: 'bg-rose-100 text-rose-700'
+                })[s] || 'bg-slate-100 text-slate-700';
+            },
+            roleText(s) {
+                return ({
+                    admin: 'Quản trị viên', manager: 'Quản lý', receptionist: 'Lễ tân', housekeeping: 'Buồng phòng'
+                })[s] || s;
+            },
+            draw() {
+                this.$nextTick(() => {
+                    let c = document.getElementById('chart');
+                    if (!c || typeof Chart === 'undefined')
+                        return;
+                    if (this.chart)
+                        this.chart.destroy();
+                    this.chart = new Chart(c, {
+                        type: 'bar', data: {
+                            labels: (this.stats.monthly || []).map(x => x.month), datasets: [{
+                                    label: 'Doanh thu đã thu', data: (this.stats.monthly || []).map(x => x.total), borderWidth: 1
+                                }]
+                        }, options: {
+                            responsive: true, maintainAspectRatio: false, plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }, scales: {
+                                y: {
+                                    beginAtZero: true, ticks: {
+                                        callback: v => new Intl.NumberFormat('vi-VN', {
+                                            notation: 'compact'
+                                        }).format(v)
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+        };
+    }
+  </script>
+ </body>
+</html>
+
