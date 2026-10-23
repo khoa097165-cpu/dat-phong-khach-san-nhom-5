@@ -233,12 +233,21 @@ function safeEqual(a, b) {
     const bb = Buffer.from(String(b || ''));
     return aa.length === bb.length && aa.length > 0 && crypto.timingSafeEqual(aa, bb);
 }
+
 app.post('/api/payments/sepay-webhook', async (q, r) => {
     const configuredKey = process.env.SEPAY_WEBHOOK_API_KEY;
     const authorization = String(q.headers.authorization || '');
-    if (!configuredKey || !safeEqual(authorization, 'Apikey ' + configuredKey))
-        return r.status(401).json({ success: false, message: 'Unauthorized' });
-    let tx;
+
+    if (
+        !configuredKey ||
+        !safeEqual(authorization, 'Apikey ' + configuredKey)
+    ) {
+        return r.status(401).json({
+            success: false,
+            message: 'Unauthorized'
+        });
+    }
+
     try {
         const data = q.body || {};
         const txId = String(data.id || '').trim();
@@ -246,42 +255,161 @@ app.post('/api/payments/sepay-webhook', async (q, r) => {
         const accountNumber = String(data.accountNumber || '').replace(/\s+/g, '');
         const content = String(data.content || data.code || '').toUpperCase();
         const amount = Number(data.transferAmount || 0);
-        if (!txId || transferType !== 'in' || accountNumber !== String(process.env.BANK_ACCOUNT || '').replace(/\s+/g, '') || !Number.isFinite(amount) || amount <= 0) {
+
+        if (
+            !txId ||
+            transferType !== 'in' ||
+            accountNumber !== String(process.env.BANK_ACCOUNT || '').replace(/\s+/g, '') ||
+            !Number.isFinite(amount) ||
+            amount <= 0
+        ) {
             return r.json({ success: true, ignored: true });
         }
-        // Booking code được đưa vào nội dung QR dưới dạng STAY <mã booking>.
-        const match = content.match(/\bSTAY\s+([A-Z0-9-]{4,})\b/);
-        if (!match) return r.json({ success: true, ignored: true, reason: 'No booking code' });
-        const bookingCode = match[1];
-        // Ghi transaction ID trước khi cập nhật booking để chống webhook gửi lặp.
-        try {
-            tx = await PaymentTransaction.create({ transactionId: txId, bookingCode, amount, accountNumber, content, receivedAt: data.transactionDate ? new Date(data.transactionDate) : new Date() });
-        } catch (e) {
-            if (e && e.code === 11000) return r.json({ success: true, duplicate: true });
-            throw e;
+
+        // Booking code chỉ có dạng BK + 6 ký tự.
+        // Ví dụ: STAY BKAB4AC3-CHUYEN TIEN
+        const match = content.match(/\b(STAY\s+)?(BK[A-Z0-9]{6})\b/);
+
+        if (!match) {
+            return r.json({
+                success: true,
+                ignored: true,
+                reason: 'No valid booking code'
+            });
         }
-        const b = await Booking.findOne({ bookingCode, paymentMethod: 'transfer', status: { $ne: 'cancelled' } });
+
+        const bookingCode = match[2];
+
+        // Tìm giao dịch đã lưu trước đó.
+        // Nếu giao dịch đã thanh toán thì không xử lý lần hai.
+        let tx = await PaymentTransaction.findOne({
+            transactionId: txId
+        });
+
+        if (tx && tx.result === 'paid') {
+            return r.json({
+                success: true,
+                duplicate: true,
+                paid: true,
+                bookingCode: tx.bookingCode
+            });
+        }
+
+        // Tạo giao dịch mới hoặc sửa thông tin giao dịch lỗi đã lưu.
+        if (!tx) {
+            try {
+                tx = await PaymentTransaction.create({
+                    transactionId: txId,
+                    bookingCode,
+                    amount,
+                    accountNumber,
+                    content,
+                    receivedAt: data.transactionDate
+                        ? new Date(data.transactionDate)
+                        : new Date()
+                });
+            } catch (e) {
+                if (e && e.code === 11000) {
+                    // Có thể webhook khác vừa tạo giao dịch.
+                    tx = await PaymentTransaction.findOne({
+                        transactionId: txId
+                    });
+
+                    if (!tx) throw e;
+
+                    if (tx.result === 'paid') {
+                        return r.json({
+                            success: true,
+                            duplicate: true,
+                            paid: true,
+                            bookingCode: tx.bookingCode
+                        });
+                    }
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        // Cập nhật mã đúng cho giao dịch cũ bị nhận sai mã.
+        tx.bookingCode = bookingCode;
+        tx.amount = amount;
+        tx.accountNumber = accountNumber;
+        tx.content = content;
+
+        const b = await Booking.findOne({
+            bookingCode,
+            paymentMethod: 'transfer',
+            status: { $ne: 'cancelled' }
+        });
+
         if (!b) {
-            tx.result = 'booking_not_found'; await tx.save();
-            return r.json({ success: true, ignored: true, reason: 'Booking not found' });
+            tx.result = 'booking_not_found';
+            await tx.save();
+
+            return r.json({
+                success: true,
+                ignored: true,
+                reason: 'Booking not found',
+                bookingCode
+            });
         }
-        const outstanding = Math.max(0, Number(b.totalAmount || 0) - Number(b.paidAmount || 0));
-        if (outstanding <= 0 || amount < outstanding) {
-            // Khoản chuyển thiếu không được báo đã thanh toán; lưu giao dịch để đối soát.
-            tx.result = outstanding <= 0 ? 'already_paid' : 'underpayment'; await tx.save();
-            return r.json({ success: true, ignored: true, reason: tx.result });
+
+        const outstanding = Math.max(
+            0,
+            Number(b.totalAmount || 0) - Number(b.paidAmount || 0)
+        );
+
+        if (outstanding <= 0) {
+            tx.result = 'already_paid';
+            await tx.save();
+
+            return r.json({
+                success: true,
+                ignored: true,
+                reason: 'Booking already paid',
+                bookingCode
+            });
         }
+
+        if (amount < outstanding) {
+            tx.result = 'underpayment';
+            await tx.save();
+
+            return r.json({
+                success: true,
+                ignored: true,
+                reason: 'Underpayment',
+                outstanding
+            });
+        }
+
         b.paidAmount = Number(b.totalAmount || 0);
         b.paymentStatus = 'paid';
-        b.notes = [b.notes, `[SePay tự xác nhận giao dịch ${txId}, ${amount} VND, ${new Date().toISOString()}]`].filter(Boolean).join('\n');
+        b.notes = [
+            b.notes,
+            `[SePay xác nhận giao dịch ${txId}, ${amount} VND, ${new Date().toISOString()}]`
+        ].filter(Boolean).join('\n');
+
         await b.save();
-        tx.result = 'paid'; await tx.save();
-        return r.json({ success: true, paid: true, bookingCode });
+
+        tx.result = 'paid';
+        await tx.save();
+
+        return r.json({
+            success: true,
+            paid: true,
+            bookingCode
+        });
     } catch (e) {
-        console.error('SePay webhook error:', e.message);
-        return r.status(500).json({ success: false, message: 'Webhook processing failed' });
+        console.error('SePay webhook error:', e);
+        return r.status(500).json({
+            success: false,
+            message: 'Webhook processing failed'
+        });
     }
 });
+
 
 function makeQrUrl(amount, bookingCode) {
     const bank = process.env.BANK_ID;
