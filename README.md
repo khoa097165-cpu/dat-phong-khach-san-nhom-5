@@ -95,85 +95,6 @@ thông tin hóa đơn.
 **Deployment:** Render\
 **Version Control:** GitHub
 
-## Cài đặt
-
-Yêu cầu Node.js, npm và MongoDB/MongoDB Atlas.
-
-Cài dependencies:
-
-    npm install
-
-Tạo file `.env`:
-
-    MONGODB_URI=your_mongodb_connection_string
-    PORT=5500
-    ADMIN_USER=your_admin_username
-    ADMIN_PASSWORD=your_admin_password
-
-> Không đưa file `.env` chứa thông tin thật lên GitHub.
-
-Chạy project:
-
-    node server.js
-
-Trang quản trị:
-
-    http://localhost:5500
-
-Website khách hàng:
-
-    http://localhost:5500/hotel.html
-
-## Cấu trúc project
-
-    StayManager/
-    ├── model/
-    ├── public/
-    ├── server.js
-    ├── package.json
-    ├── package-lock.json
-    ├── .env
-    ├── .env.example
-    └── README.md
-
-## Luồng nghiệp vụ
-
-    Khách xem phòng
-        ↓
-    Chọn ngày lưu trú
-        ↓
-    Kiểm tra phòng trống
-        ↓
-    Đặt phòng
-        ↓
-    Lưu booking vào MongoDB
-        ↓
-    Lễ tân xác nhận
-        ↓
-    Check-in
-        ↓
-    Sử dụng dịch vụ
-        ↓
-    Thanh toán
-        ↓
-    Check-out
-        ↓
-    Housekeeping
-        ↓
-    Phòng sẵn sàng
-
-## Mục tiêu đồ án
-
-StayManager mô phỏng quy trình vận hành cơ bản của khách sạn từ đặt
-phòng đến check-in, dịch vụ, thanh toán, check-out, housekeeping và báo
-cáo. Project giúp thực hành giao diện web, REST API, Node.js/Express,
-MongoDB/Mongoose, quản lý dữ liệu và triển khai ứng dụng.
-
-## Tác giả
-
-**StayManager Hotel Management Project**\
-Đồ án phục vụ mục đích học tập.
-
 
 ## Cập nhật: thanh toán và khuyến mãi website khách hàng
 
@@ -183,25 +104,6 @@ MongoDB/Mongoose, quản lý dữ liệu và triển khai ứng dụng.
 - Quản trị viên có mục **Ưu Đãi & Mã Giảm Giá** để tạo mã, đặt kiểu giảm theo phần trăm/số tiền, mức giảm tối đa, giá trị đơn tối thiểu, thời gian áp dụng và giới hạn lượt dùng.
 - Mã khuyến mãi được xác thực lại ở máy chủ trước khi tạo booking. Các API quản trị mã yêu cầu đăng nhập.
 
-Ví dụ cấu hình `.env` (thay bằng thông tin tài khoản nhận tiền của khách sạn):
-
-    BANK_ID=MB
-    BANK_ACCOUNT=0378116354
-    BANK_NAME=YOUR_ACCOUNT_HOLDER_NAME
-
-Không dùng thông tin ví dụ làm tài khoản nhận tiền thật. Sau khi sửa `.env`, khởi động lại server.
-
-
-## Cấu hình website đặt phòng và QR
-
-Tạo file `.env` ở thư mục gốc (có thể sao chép từ `.env.example`) và điền:
-
-- `MONGODB_URI`: chuỗi kết nối MongoDB.
-- `PORT`: cổng chạy local, mặc định `5500`.
-- `ADMIN_USER`, `ADMIN_PASSWORD`: tài khoản quản trị; đổi mật khẩu mẫu trước khi đưa lên Internet.
-- `BANK_ID`, `BANK_ACCOUNT`, `BANK_NAME`: ngân hàng, số tài khoản và tên chủ tài khoản dùng để tạo QR VietQR.
-
-Chạy `npm install`, sau đó `npm start`. Website khách hàng: `/hotel.html`; trang quản trị: `/`.
 
 ### Chính sách hủy hiển thị cho khách
 
