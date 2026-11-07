@@ -1,0 +1,2792 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "StayManager API",
+    "version": "1.0.0",
+    "description": "Tài liệu API được lập theo các route thực tế trong server.js. Các endpoint hiện dùng tiền tố /api và chưa đổi URL để tránh phá vỡ website hiện tại."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5500",
+      "description": "Máy phát triển"
+    }
+  ],
+  "tags": [
+    {
+      "name": "System"
+    },
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Public"
+    },
+    {
+      "name": "Rooms"
+    },
+    {
+      "name": "Bookings"
+    },
+    {
+      "name": "Customers"
+    },
+    {
+      "name": "Services"
+    },
+    {
+      "name": "Promotions"
+    },
+    {
+      "name": "Payments"
+    },
+    {
+      "name": "Reviews"
+    },
+    {
+      "name": "Users"
+    },
+    {
+      "name": "Settings"
+    },
+    {
+      "name": "Reports"
+    },
+    {
+      "name": "Administration"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Opaque token"
+      }
+    },
+    "schemas": {
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "ReviewCreate": {
+        "type": "object",
+        "required": [
+          "bookingCode",
+          "customerPhone",
+          "rating",
+          "comment"
+        ],
+        "properties": {
+          "bookingCode": {
+            "type": "string"
+          },
+          "customerPhone": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "comment": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 1500
+          }
+        }
+      },
+      "BookingCreate": {
+        "type": "object",
+        "required": [
+          "customerName",
+          "customerPhone",
+          "roomId",
+          "checkInDate",
+          "checkOutDate"
+        ],
+        "properties": {
+          "customerName": {
+            "type": "string"
+          },
+          "customerPhone": {
+            "type": "string"
+          },
+          "customerEmail": {
+            "type": "string",
+            "format": "email"
+          },
+          "roomId": {
+            "type": "string"
+          },
+          "checkInDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "checkOutDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "guests": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "transfer"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Đăng nhập",
+        "description": "Quyền truy cập: Public. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "admin"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Kiểm tra trạng thái máy chủ",
+        "description": "Quyền truy cập: Public. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        }
+      }
+    },
+    "/api/public/settings": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Lấy cấu hình công khai của khách sạn",
+        "description": "Quyền truy cập: Public. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        }
+      }
+    },
+    "/api/public/rooms": {
+      "get": {
+        "tags": [
+          "Rooms"
+        ],
+        "summary": "Danh sách phòng có thể hiển thị",
+        "description": "Quyền truy cập: Public. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        }
+      }
+    },
+    "/api/public/available": {
+      "get": {
+        "tags": [
+          "Rooms"
+        ],
+        "summary": "Tìm phòng trống theo ngày",
+        "description": "Quyền truy cập: Public. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "checkIn",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "checkOut",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ]
+      }
+    },
+    "/api/public/promotions": {
+      "get": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Danh sách khuyến mãi công khai",
+        "description": "Quyền truy cập: Public. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        }
+      }
+    },
+    "/api/public/promotions/validate": {
+      "post": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Kiểm tra mã khuyến mãi",
+        "description": "Quyền truy cập: Public. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/bookings": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Khách tạo đặt phòng",
+        "description": "Quyền truy cập: Public. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "customerName",
+                  "customerPhone",
+                  "roomId",
+                  "checkInDate",
+                  "checkOutDate"
+                ],
+                "properties": {
+                  "customerName": {
+                    "type": "string",
+                    "example": "Nguyễn Văn An"
+                  },
+                  "customerPhone": {
+                    "type": "string",
+                    "example": "0901234567"
+                  },
+                  "customerEmail": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "roomId": {
+                    "type": "string"
+                  },
+                  "checkInDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "checkOutDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "guests": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 1
+                  },
+                  "promoCode": {
+                    "type": "string"
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "enum": [
+                      "cash",
+                      "transfer"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/bookings/lookup": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Tra cứu đặt phòng bằng mã và số điện thoại",
+        "description": "Quyền truy cập: Public. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "bookingCode",
+                  "customerPhone"
+                ],
+                "properties": {
+                  "bookingCode": {
+                    "type": "string"
+                  },
+                  "customerPhone": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/bookings/cancel": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Khách yêu cầu hủy đặt phòng",
+        "description": "Quyền truy cập: Public. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "bookingCode",
+                  "customerPhone"
+                ],
+                "properties": {
+                  "bookingCode": {
+                    "type": "string"
+                  },
+                  "customerPhone": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/reviews": {
+      "get": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Danh sách đánh giá đã công khai",
+        "description": "Quyền truy cập: Public. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 6,
+              "minimum": 1,
+              "maximum": 12
+            }
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Khách gửi đánh giá sau lưu trú",
+        "description": "Quyền truy cập: Public. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 6,
+              "minimum": 1,
+              "maximum": 12
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "bookingCode",
+                  "customerPhone",
+                  "rating",
+                  "comment"
+                ],
+                "properties": {
+                  "bookingCode": {
+                    "type": "string",
+                    "example": "BKAB4AC3"
+                  },
+                  "customerPhone": {
+                    "type": "string",
+                    "example": "0901234567"
+                  },
+                  "rating": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "title": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "comment": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 1500
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/sepay-webhook": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Nhận webhook thanh toán SePay",
+        "description": "Quyền truy cập: SePay API key. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "Apikey YOUR_SEPAY_WEBHOOK_API_KEY"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Thông tin tài khoản đang đăng nhập",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Đăng xuất",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audit-logs": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Nhật ký thao tác",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/reviews": {
+      "get": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Quản lý tất cả đánh giá",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/reviews/{id}": {
+      "patch": {
+        "tags": [
+          "Reviews"
+        ],
+        "summary": "Duyệt hoặc từ chối đánh giá",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/bookings.csv": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Xuất báo cáo booking CSV",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/promotions": {
+      "get": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Danh sách khuyến mãi quản trị",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Tạo khuyến mãi",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/promotions/{id}": {
+      "put": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Cập nhật khuyến mãi",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Promotions"
+        ],
+        "summary": "Xóa khuyến mãi",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Danh sách tài khoản nhân viên",
+        "description": "Quyền truy cập: Admin. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Tạo tài khoản nhân viên",
+        "description": "Quyền truy cập: Admin. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Cập nhật tài khoản nhân viên",
+        "description": "Quyền truy cập: Admin. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms/{id}/housekeeping": {
+      "post": {
+        "tags": [
+          "Rooms"
+        ],
+        "summary": "Cập nhật tình trạng buồng phòng",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Lấy cấu hình quản trị",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Cập nhật cấu hình khách sạn",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms": {
+      "get": {
+        "tags": [
+          "Rooms"
+        ],
+        "summary": "Danh sách phòng quản trị",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Rooms"
+        ],
+        "summary": "Tạo phòng",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms/{id}": {
+      "put": {
+        "tags": [
+          "Rooms"
+        ],
+        "summary": "Cập nhật phòng",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Rooms"
+        ],
+        "summary": "Xóa phòng",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/rooms/available": {
+      "get": {
+        "tags": [
+          "Rooms"
+        ],
+        "summary": "Tìm phòng trống cho nhân viên",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "checkIn",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "checkOut",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/customers": {
+      "get": {
+        "tags": [
+          "Customers"
+        ],
+        "summary": "Danh sách khách hàng",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Customers"
+        ],
+        "summary": "Tạo khách hàng",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers/{id}": {
+      "put": {
+        "tags": [
+          "Customers"
+        ],
+        "summary": "Cập nhật khách hàng",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/services": {
+      "get": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Danh sách dịch vụ",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Tạo dịch vụ",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/services/{id}": {
+      "put": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Cập nhật dịch vụ",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Xóa dịch vụ",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/bookings": {
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Danh sách đặt phòng",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Nhân viên tạo booking tại quầy",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings/{id}/checkin": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Nhận phòng",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings/{id}/services": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Thêm dịch vụ vào booking",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings/{id}/payment": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Ghi nhận khoản thanh toán",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "amount"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "cash",
+                      "transfer",
+                      "card",
+                      "other"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings/{id}/checkout": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Trả phòng",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Nhân viên hủy booking",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings/{id}/refund-status": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Cập nhật trạng thái hoàn tiền",
+        "description": "Quyền truy cập: Admin/Manager. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId."
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "processing",
+                      "completed",
+                      "rejected"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stats": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Thống kê dashboard",
+        "description": "Quyền truy cập: Authenticated. Đây là endpoint hiện có trong server.js của dự án.",
+        "responses": {
+          "200": {
+            "description": "Thành công."
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc vi phạm nghiệp vụ."
+          },
+          "401": {
+            "description": "Chưa xác thực hoặc thông tin xác thực không hợp lệ."
+          },
+          "403": {
+            "description": "Không đủ quyền hoặc không thỏa điều kiện nghiệp vụ."
+          },
+          "404": {
+            "description": "Không tìm thấy tài nguyên."
+          },
+          "409": {
+            "description": "Xung đột trạng thái, ví dụ phòng đã được đặt hoặc booking đã xử lý."
+          },
+          "429": {
+            "description": "Vượt giới hạn yêu cầu."
+          },
+          "500": {
+            "description": "Lỗi máy chủ; đối chiếu X-Request-Id."
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    }
+  }
+}
